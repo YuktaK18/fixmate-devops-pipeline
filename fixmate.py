@@ -37,7 +37,7 @@ def update_booking_status(current_status, new_status):
 
 if __name__ == "__main__":
 
-    service_name = "Plumbing"
+    service_name = "AC Repair"
     service_charge = 500
     quantity = 1
 
