@@ -1,0 +1,368 @@
+EXPERIMENT 6
+AGILE ESTIMATION AND PROJECT PLANNING
+Case Study: Fixmate — Home Service Management System
+Field
+Details
+Name
+________________________________________
+Roll Number
+________________________________________
+Class / Department
+________________________________________
+Subject
+Software Engineering
+Date
+________________________________________
+Note: Example estimates and schedules in this document are illustrative. Replace them with actual group voting and practical screenshots before submission.
+1. Aim
+To implement Agile estimation techniques by performing effort and sprint estimation using Story Points, Planning Poker and T-Shirt Sizing; prepare project schedules using Agile planning tools such as Jira/GitHub Projects; visualize timelines through Sprint Backlogs, Burndown Charts and Gantt Charts; and compare Agile estimation approaches with Function Point Analysis (FPA).
+2. System Overview — Fixmate
+Fixmate is a Home Service Management System that helps customers discover and book home services such as plumbing, electrical repair, appliance repair and cleaning. It can support customer registration, service search, booking, payment, service-provider assignment, booking tracking and administrative reports.
+Problem addressed: Customers may find it difficult to locate trusted service providers, book a convenient time, track booking progress and manage payments. Service providers and administrators also need a structured way to manage service requests and bookings.
+Scope used for this experiment
+The examples assume a Fixmate application with customer-facing booking features and an administrator/provider management area. External payment and notification services are treated as integrations. Function counts, estimates and schedules below are educational examples, not measured results from a deployed system.
+3. Theory
+3.1 Agile Estimation
+Agile estimation is an iterative way to estimate the relative effort, complexity, uncertainty and workload involved in completing software work. Estimates are refined as the team learns more about requirements and risks.
+3.2 Story Points
+Story Points are abstract, relative units used to estimate a user story. They do not directly represent hours. Teams commonly use Fibonacci-based values such as 1, 2, 3, 5, 8, 13 and 21 because uncertainty tends to grow as work becomes larger.
+3.3 Planning Poker
+Planning Poker is a consensus-based estimation technique. The Product Owner explains a user story; team members independently choose a card; all cards are revealed; differences are discussed; and the team votes again until it agrees on a reasonable estimate.
+3.4 T-Shirt Sizing
+T-Shirt Sizing is a quick, qualitative method that classifies work as XS, S, M, L, XL or XXL. It is useful during early planning when the team needs a rough comparison before assigning numerical Story Points.
+3.5 Function Point Analysis (FPA)
+Function Point Analysis estimates functional size by classifying user-visible functions into five types: External Inputs (EI), External Outputs (EO), External Inquiries (EQ), Internal Logical Files (ILF) and External Interface Files (EIF). Complexity is classified as low, average or high using the applicable counting rules.
+Type
+Meaning
+Fixmate examples
+EI — External Input
+Data entering the application and changing data or controlling processing
+Customer registration, booking request, update service profile
+EO — External Output
+Processed information sent to a user or external system
+Booking confirmation, invoice, admin service report
+EQ — External Inquiry
+Request/response retrieving information with minimal processing
+Search services, view booking status, view provider profile
+ILF — Internal Logical File
+Logical data maintained by Fixmate
+Customer, provider, service catalogue, booking records
+EIF — External Interface File
+Data maintained externally but referenced by Fixmate
+External payment transaction reference data; external provider availability feed if maintained externally
+3.6 Standard Function Point Weights
+Function Type
+Low
+Average
+High
+External Inputs (EI)
+3
+4
+6
+External Outputs (EO)
+4
+5
+7
+External Inquiries (EQ)
+3
+4
+6
+Internal Logical Files (ILF)
+7
+10
+15
+External Interface Files (EIF)
+5
+7
+10
+Unadjusted Function Points (UFP) = sum of (function count × applicable complexity weight).
+Complexity Adjustment Factor (CAF/VAF) = 0.65 + (0.01 × TDI), where TDI is the sum of ratings for the 14 General System Characteristics. Adjusted FP = UFP × CAF.
+3.7 Effort Estimation
+Effort (person-hours) = Adjusted FP × productivity rate (hours per FP). Project duration (months) = total person-hours ÷ (team size × productive working hours per person per month). These are planning approximations; actual productivity depends on project context.
+4. Implementation — Part A: Function Point Analysis
+Step 1: Identify Fixmate functions
+The following table is a simplified worked example. In formal FPA, complexity should be determined using data element types, record element types and referenced files; the complexity labels below are illustrative for the lab.
+Type
+Function
+Complexity
+Weight
+EI
+Customer registration
+Average
+4
+EI
+Customer login
+Low
+3
+EI
+Create service booking
+High
+6
+EI
+Update/cancel booking
+Average
+4
+EI
+Provider updates service status
+Average
+4
+EI
+Admin adds/updates service listing
+Average
+4
+EO
+Booking confirmation
+Low
+4
+EO
+Payment receipt/invoice
+Average
+5
+EO
+Admin service/booking report
+High
+7
+EQ
+Search home services
+Average
+4
+EQ
+View provider profile
+Low
+3
+EQ
+Check booking status
+Low
+3
+ILF
+Customer data
+Average
+10
+ILF
+Service provider data
+Average
+10
+ILF
+Service catalogue data
+Average
+10
+ILF
+Booking records
+High
+15
+ILF
+Payment/transaction records
+Average
+10
+EIF
+External payment transaction reference data
+Average
+7
+EIF
+External notification delivery status data, if externally maintained
+Low
+5
+Step 2: UFP summary
+Function Type
+Low count
+Average count
+High count
+Weighted total
+EI
+1
+4
+1
+3 + (4×4) + 6 = 25
+EO
+1
+1
+1
+4 + 5 + 7 = 16
+EQ
+2
+1
+0
+(2×3) + 4 = 10
+ILF
+0
+4
+1
+(4×10) + 15 = 55
+EIF
+1
+1
+0
+5 + 7 = 12
+TOTAL
+118 UFP
+UFP = 25 + 16 + 10 + 55 + 12 = 118.
+Note: EIF examples count only if Fixmate references logical data groups maintained outside the application. An external API alone does not automatically count as an EIF.
+Step 3: Complexity adjustment (illustrative)
+GSC calculation
+Value
+Number of General System Characteristics
+14
+Assumed rating per characteristic
+3
+Total Degree of Influence (TDI)
+14 × 3 = 42
+CAF / VAF
+0.65 + (0.01 × 42) = 1.07
+Adjusted Function Points
+118 × 1.07 = 126.26 FP
+Step 4: Effort estimation
+Metric
+Illustrative value
+Adjusted Function Points
+126.26 FP
+Assumed productivity rate
+8 person-hours per FP
+Estimated effort
+126.26 × 8 = 1,010.08 person-hours
+Team size
+4 people
+Productive hours per person per month
+120 hours
+Estimated duration
+1,010.08 ÷ (4 × 120) = 2.10 months (approx.)
+The productivity rate and team capacity are assumptions. Replace them with a teacher-provided rate or historical project data if available.
+Spreadsheet implementation: Create columns for Function Type, Function, Complexity and Weight. Summarize low/average/high counts, multiply counts by weights, and use SUM to calculate UFP. Calculate CAF and effort in separate cells.
+5. Implementation — Part B: T-Shirt Sizing
+Procedure: Form a group of 3–4 students and assign roles such as Product Owner, Scrum Master, Developer and Tester/Observer. Each member independently chooses XS/S/M/L/XL/XXL for each story. Reveal choices, discuss complexity, testing, dependencies, risk and uncertainty, then record the agreed final size.
+ID
+User Story
+Description
+Example final size
+US1
+Customer Registration
+A customer creates an account to book home services.
+S
+US2
+Login
+A customer or provider securely logs into Fixmate.
+S
+US3
+Search Services
+A customer searches and filters available home services.
+M
+US4
+Book a Service
+A customer selects a service, address and preferred time slot.
+L
+US5
+Online Payment
+A customer pays for a confirmed service booking.
+XL
+US6
+Track Booking
+A customer views the current booking and service status.
+M
+US7
+Provider Management
+An administrator adds or updates service-provider details.
+L
+US8
+Service/Booking Reports
+An administrator views summary reports on bookings and services.
+L
+The sizes above are sample estimates to demonstrate the format. Replace them with actual group consensus before submission.
+User Story
+Student 1
+Student 2
+Student 3
+Student 4
+Final Size
+US1 — Customer Registration
+US2 — Login
+US3 — Search Services
+US4 — Book a Service
+US5 — Online Payment
+US6 — Track Booking
+US7 — Provider Management
+US8 — Service/Booking Reports
+[Insert actual screenshot of T-Shirt Sizing session/board here.] Caption: Figure 1. T-Shirt Sizing of Fixmate user stories.
+6. Implementation — Part C: Planning Poker
+Use Fibonacci-based cards 1, 2, 3, 5, 8, 13 and 21. Read one story at a time, collect private votes, reveal together, discuss highest and lowest estimates, and vote again to record the agreed Story Points.
+ID
+User Story
+Example final Story Points
+Reason
+US1
+Customer Registration
+3
+Basic form and validation
+US2
+Login
+2
+Authentication and error handling
+US3
+Search Services
+5
+Search and filters
+US4
+Book a Service
+8
+Scheduling, address and booking validation
+US5
+Online Payment
+13
+Payment integration and failure handling
+US6
+Track Booking
+5
+Status display and updates
+US7
+Provider Management
+8
+Provider data management and validation
+US8
+Service/Booking Reports
+8
+Data aggregation and report output
+The sample values total 52 Story Points. They are not actual group votes. Record the actual votes and consensus below.
+User Story
+Student 1
+Student 2
+Student 3
+Student 4
+Final Points
+US1 — Customer Registration
+US2 — Login
+US3 — Search Services
+US4 — Book a Service
+US5 — Online Payment
+US6 — Track Booking
+US7 — Provider Management
+US8 — Service/Booking Reports
+[Insert actual screenshot of Planning Poker room/session here.] Caption: Figure 2. Planning Poker estimation for Fixmate.
+7. Final Comparison: T-Shirt Sizing vs Story Points
+User Story
+T-Shirt Size (example)
+Story Points (example)
+US1 — Customer Registration
+S
+3
+US2 — Login
+S
+2
+US3 — Search Services
+M
+5
+US4 — Book a Service
+L
+8
+US5 — Online Payment
+XL
+13
+US6 — Track Booking
+M
+5
+US7 — Provider Management
+L
+8
+US8 — Service/Booking Reports
+L
+8
+T-Shirt Sizing is a qualitative, quick comparison. Story Points provide a numeric relative estimate useful for sprint planning. There is no universal conversion between a T-Shirt size and a specific Story Point value; the team should estimate each method independently.
+11. Conclusion
+This experiment demonstrates that T-Shirt Sizing and Planning Poker support relative estimation and collaborative decision-making, while Function Point Analysis estimates functional size using defined function categories and complexity weights. Function Points can be converted to an effort estimate when a productivity rate is available. Backlogs, sprint boards, burndown charts and Gantt timelines help teams organize work and communicate progress. For Fixmate, these techniques provide a structured way to plan features such as service search, booking, payment and tracking. Actual estimates should be validated by the project team and updated as requirements become clearer.
