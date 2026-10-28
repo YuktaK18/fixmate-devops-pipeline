@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Simulated Checkout — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Simulated Notice Banner (SRS 4.6 Transparency) -->
+      <div class="alert alert-info d-flex align-items-center mb-4 shadow-sm" role="alert">
+        <i class="bi bi-info-circle-fill fs-3 me-3 text-primary"></i>
+        <div>
+          <strong class="d-block fs-6">SIMULATED PAYMENT GATEWAY (Demo Mode)</strong>
+          <span class="small">This flow accurately models commercial payment processing (UPI, Card, Net Banking, Wallet) with cryptographic transaction references, 18% GST calculation, and platform commission splits without charging real money.</span>
+        </div>
+      </div>
+
+      <div class="card card-fixmate p-4 p-md-5">
+        <div class="d-flex justify-content-between align-items-center pb-3 border-bottom mb-4">
+          <div>
+            <h4 class="fw-bold mb-1">Service Checkout</h4>
+            <span class="text-muted small">Booking Ref: <strong>#{{ booking.booking_code }}</strong> &bull; Service: {{ booking.category.name }}</span>
+          </div>
+          <div class="text-end">
+            <span class="small text-muted d-block">Technician:</span>
+            <span class="fw-semibold text-dark">{{ booking.provider.name }}</span>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <!-- Left: Payment Method Selection -->
+          <div class="col-md-7">
+            <h6 class="fw-bold mb-3">Select Payment Method</h6>
+
+            <form method="POST" action="{{ url_for('payments.process_payment', booking_id=booking.id) }}" id="paymentForm">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+              <!-- UPI -->
+              <div class="form-check p-3 border rounded mb-2 d-flex align-items-center">
+                <input class="form-check-input me-3" type="radio" name="payment_method" id="payUPI" value="UPI" checked>
+                <label class="form-check-label w-100" for="payUPI">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong class="d-block">UPI (Google Pay, PhonePe, Paytm)</strong>
+                      <span class="small text-muted">Instant transfer via UPI ID / QR</span>
+                    </div>
+                    <i class="bi bi-qr-code-scan fs-4 text-primary"></i>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Credit / Debit Card -->
+              <div class="form-check p-3 border rounded mb-2 d-flex align-items-center">
+                <input class="form-check-input me-3" type="radio" name="payment_method" id="payCard" value="CARD">
+                <label class="form-check-label w-100" for="payCard">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong class="d-block">Debit / Credit Card</strong>
+                      <span class="small text-muted">Visa, MasterCard, RuPay (Simulated)</span>
+                    </div>
+                    <i class="bi bi-credit-card-2-front fs-4 text-success"></i>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Net Banking -->
+              <div class="form-check p-3 border rounded mb-2 d-flex align-items-center">
+                <input class="form-check-input me-3" type="radio" name="payment_method" id="payNet" value="NET_BANKING">
+                <label class="form-check-label w-100" for="payNet">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong class="d-block">Net Banking</strong>
+                      <span class="small text-muted">HDFC, ICICI, SBI, Axis, Kotak</span>
+                    </div>
+                    <i class="bi bi-bank fs-4 text-secondary"></i>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Wallet -->
+              <div class="form-check p-3 border rounded mb-4 d-flex align-items-center">
+                <input class="form-check-input me-3" type="radio" name="payment_method" id="payWallet" value="WALLET">
+                <label class="form-check-label w-100" for="payWallet">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong class="d-block">Mobile Wallet</strong>
+                      <span class="small text-muted">Paytm Wallet, Amazon Pay</span>
+                    </div>
+                    <i class="bi bi-wallet2 fs-4 text-warning"></i>
+                  </div>
+                </label>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-success py-2 fw-semibold fs-5">
+                  <i class="bi bi-lock-fill me-1"></i> Pay ₹{{ breakdown.total_amount }} (Simulated)
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right: Bill Breakdown -->
+          <div class="col-md-5">
+            <div class="p-3 bg-light rounded border">
+              <h6 class="fw-bold mb-3">Order Summary</h6>
+              <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Service Base Amount:</span>
+                <span>₹{{ breakdown.subtotal }}</span>
+              </div>
+              <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Goods & Services Tax (GST @ {{ breakdown.gst_rate }}%):</span>
+                <span>₹{{ breakdown.gst_amount }}</span>
+              </div>
+              <div class="d-flex justify-content-between small text-muted mb-2 ps-2" style="font-size: 0.75rem;">
+                <span>&bull; CGST (9%):</span>
+                <span>₹{{ (breakdown.gst_amount / 2)|round(2) }}</span>
+              </div>
+              <div class="d-flex justify-content-between small text-muted mb-2 ps-2" style="font-size: 0.75rem;">
+                <span>&bull; SGST (9%):</span>
+                <span>₹{{ (breakdown.gst_amount / 2)|round(2) }}</span>
+              </div>
+              <hr class="my-2">
+              <div class="d-flex justify-content-between fw-bold fs-5 text-dark mb-3">
+                <span>Total Amount:</span>
+                <span class="text-success">₹{{ breakdown.total_amount }}</span>
+              </div>
+
+              <div class="small text-muted p-2 bg-white rounded border" style="font-size: 0.75rem;">
+                <strong>Behind the scenes (Platform Split):</strong><br/>
+                &bull; Platform Commission (10%): ₹{{ breakdown.commission_amount }}<br/>
+                &bull; Provider Net Payout: ₹{{ breakdown.provider_payout_amount }} (held in escrow)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

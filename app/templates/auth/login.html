@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+
+      {% if demo_reset_link %}
+        <div class="alert alert-info shadow-sm mb-4">
+          <h6 class="fw-bold mb-1"><i class="bi bi-key-fill me-1"></i> Demo Password Reset Link Generated</h6>
+          <p class="small mb-2">In live deployment, this is emailed. In local demo mode, click below:</p>
+          <a href="{{ demo_reset_link }}" class="btn btn-sm btn-primary">Reset Password Now</a>
+        </div>
+      {% endif %}
+
+      <div class="card card-fixmate p-4 p-md-5">
+        <div class="text-center mb-4">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+            <i class="bi bi-lock-fill fs-4"></i>
+          </div>
+          <h3 class="fw-bold">Sign In to FixMate</h3>
+          <p class="text-muted small">Access your Customer, Provider, or Admin account</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.email.label(class="form-label fw-semibold small") }}
+            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="name@example.com", id="login-email") }}
+            {% for error in form.email.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              {{ form.password.label(class="form-label fw-semibold small") }}
+              <a href="{{ url_for('auth.reset_password_request') }}" class="small text-decoration-none">Forgot password?</a>
+            </div>
+            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="••••••••", id="login-password") }}
+            {% for error in form.password.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3 form-check">
+            {{ form.remember_me(class="form-check-input") }}
+            {{ form.remember_me.label(class="form-check-label small text-muted") }}
+          </div>
+
+          <div class="d-grid mb-3">
+            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+          </div>
+
+          <!-- Quick Fill Demo Buttons (Academic Live Demo Convenience) -->
+          <div class="p-3 bg-light rounded border mt-3 text-center">
+            <span class="small text-muted d-block mb-2 fw-semibold"><i class="bi bi-lightning-fill text-warning me-1"></i> Quick Demo Logins:</span>
+            <div class="btn-group btn-group-sm w-100" role="group">
+              <button type="button" class="btn btn-outline-secondary" onclick="fillLogin('rahul@fixmate.local', 'Customer@123')">Customer</button>
+              <button type="button" class="btn btn-outline-secondary" onclick="fillLogin('ramesh.plumber@fixmate.local', 'Provider@123')">Provider</button>
+              <button type="button" class="btn btn-outline-secondary" onclick="fillLogin('admin@fixmate.local', 'Admin@FixMate2026!')">Admin</button>
+            </div>
+          </div>
+
+          <div class="text-center mt-4">
+            <p class="small text-muted mb-0">Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-decoration-none fw-semibold">Sign up</a></p>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fillLogin(email, password) {
+  document.getElementById('login-email').value = email;
+  document.getElementById('login-password').value = password;
+}
+</script>
+{% endblock %}

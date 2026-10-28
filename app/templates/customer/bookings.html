@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">My Service Bookings</h3>
+      <p class="text-muted small mb-0">Track live job statuses, view tax invoices, and rebook past services.</p>
+    </div>
+    <div>
+      <a href="{{ url_for('customer.categories') }}" class="btn btn-primary rounded-pill btn-sm px-3">
+        <i class="bi bi-plus me-1"></i> New Booking
+      </a>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs (SRS 4.10) -->
+  <ul class="nav nav-pills mb-4 gap-2">
+    <li class="nav-item">
+      <a class="nav-link {% if current_tab == 'upcoming' %}active{% endif %}" href="{{ url_for('customer.bookings', tab='upcoming') }}">
+        <i class="bi bi-calendar-event me-1"></i> Upcoming
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_tab == 'active' %}active{% endif %}" href="{{ url_for('customer.bookings', tab='active') }}">
+        <i class="bi bi-hourglass-split me-1"></i> Active / In-Progress
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_tab == 'completed' %}active{% endif %}" href="{{ url_for('customer.bookings', tab='completed') }}">
+        <i class="bi bi-check-circle me-1"></i> Completed
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_tab == 'cancelled' %}active{% endif %}" href="{{ url_for('customer.bookings', tab='cancelled') }}">
+        <i class="bi bi-x-circle me-1"></i> Cancelled
+      </a>
+    </li>
+  </ul>
+
+  <!-- Bookings List -->
+  {% if bookings %}
+    <div class="row g-3">
+      {% for b in bookings %}
+        <div class="col-12">
+          <div class="card card-fixmate p-3 p-md-4">
+            <div class="row align-items-center g-3">
+              <!-- Service Info -->
+              <div class="col-md-3">
+                <span class="badge badge-{{ b.status.lower() }} mb-2">{{ b.status }}</span>
+                {% if b.status == 'PENDING' and b.response_deadline %}
+                  <div class="mb-2" data-countdown-deadline="{{ b.response_deadline.isoformat() }}"></div>
+                {% endif %}
+                <h5 class="fw-bold mb-1">{{ b.category.name }}</h5>
+                <span class="text-muted small">Ref: <strong>#{{ b.booking_code }}</strong></span>
+              </div>
+
+              <!-- Technician Details -->
+              <div class="col-md-3 small">
+                <span class="text-muted d-block">Technician:</span>
+                <span class="fw-semibold text-dark">{{ b.provider.name }}</span>
+                <span class="text-muted d-block mt-1"><i class="bi bi-geo-alt me-1 text-danger"></i> {{ b.service_address | truncate(35) }}</span>
+              </div>
+
+              <!-- Appointment Slot -->
+              <div class="col-md-3 small">
+                <span class="text-muted d-block">Date & Slot:</span>
+                <span class="fw-semibold text-dark">{{ b.scheduled_date.strftime('%a, %d-%b-%Y') }}</span>
+                <span class="text-muted d-block">{{ b.scheduled_time_slot }}</span>
+              </div>
+
+              <!-- Amount & Actions -->
+              <div class="col-md-3 text-md-end">
+                <span class="text-muted small d-block">Amount:</span>
+                <span class="fs-5 fw-bold text-primary d-block mb-2">₹{{ b.final_amount if b.final_amount else b.quoted_amount }}</span>
+                <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                  <a href="{{ url_for('customer.booking_detail', booking_id=b.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    View Details
+                  </a>
+                  {% if b.status == 'COMPLETED' %}
+                    <a href="{{ url_for('customer.book_again', booking_id=b.id) }}" class="btn btn-primary btn-sm rounded-pill px-3" title="One-click rebooking">
+                      <i class="bi bi-arrow-repeat me-1"></i> Book Again
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card card-fixmate p-5 text-center bg-light">
+      <i class="bi bi-journal-x fs-1 text-muted d-block mb-3"></i>
+      <h5 class="fw-bold">No bookings found in this category</h5>
+      <p class="small text-muted mb-3">You don't have any {{ current_tab }} service bookings.</p>
+      <div>
+        <a href="{{ url_for('customer.categories') }}" class="btn btn-primary btn-sm rounded-pill px-4">
+          Browse Services
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

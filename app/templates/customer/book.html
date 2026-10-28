@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Book {{ provider.name }} — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card card-fixmate p-4 p-md-5">
+        <!-- Header -->
+        <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+          <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold fs-4" style="width: 54px; height: 54px;">
+            {{ provider.name[:1] }}
+          </div>
+          <div>
+            <h4 class="fw-bold mb-0">Book Service with {{ provider.name }}</h4>
+            <span class="text-muted small">Service: <strong>{{ selected_category.name if selected_category else 'Home Service' }}</strong></span>
+          </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('customer.book_service', provider_id=provider.id) }}" novalidate>
+          {{ form.hidden_tag() }}
+
+          <!-- Service Category Picker -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Selected Service</label>
+            <select class="form-select" onchange="window.location.href='{{ url_for('customer.book_service', provider_id=provider.id) }}?category_id=' + this.value">
+              {% for s in services %}
+                <option value="{{ s.category_id }}" {% if s.category_id == selected_category.id %}selected{% endif %}>
+                  {{ s.category.name }} — ₹{{ s.custom_price }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Date & Slot Picker (Up to 30 days ahead per SRS 4.4.3) -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              {{ form.scheduled_date.label(class="form-label fw-semibold small") }}
+              {{ form.scheduled_date(class="form-control" + (" is-invalid" if form.scheduled_date.errors else ""), min=now.strftime('%Y-%m-%d')) }}
+              {% for error in form.scheduled_date.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text small">Select today or up to 30 days ahead.</div>
+            </div>
+
+            <div class="col-md-6">
+              {{ form.scheduled_time_slot.label(class="form-label fw-semibold small") }}
+              {{ form.scheduled_time_slot(class="form-select" + (" is-invalid" if form.scheduled_time_slot.errors else "")) }}
+              {% for error in form.scheduled_time_slot.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Address & Pincode -->
+          <div class="mb-3">
+            {{ form.service_address.label(class="form-label fw-semibold small") }}
+            {{ form.service_address(class="form-control" + (" is-invalid" if form.service_address.errors else ""), rows="3", placeholder="House/Flat number, Building name, Street, Landmark...") }}
+            {% for error in form.service_address.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              {{ form.pincode.label(class="form-label fw-semibold small") }}
+              {{ form.pincode(class="form-control" + (" is-invalid" if form.pincode.errors else ""), placeholder="e.g. 400071") }}
+              {% for error in form.pincode.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Provider Service Area</label>
+              <input type="text" class="form-control bg-light" value="{{ profile.service_area_name }} (PIN: {{ profile.service_pincode }})" readonly>
+            </div>
+          </div>
+
+          <!-- Special Instructions -->
+          <div class="mb-4">
+            {{ form.special_instructions.label(class="form-label fw-semibold small") }}
+            {{ form.special_instructions(class="form-control" + (" is-invalid" if form.special_instructions.errors else ""), rows="2", placeholder="e.g. Please bring extra piping connector; call before arriving...") }}
+            {% for error in form.special_instructions.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <!-- Booking Terms Notice -->
+          <div class="p-3 bg-light rounded border mb-4 small text-muted">
+            <i class="bi bi-shield-check text-primary me-1"></i>
+            <strong>Booking Guarantee:</strong> The provider receives your request instantly and has <strong>5 minutes</strong> to accept. You can cancel free of charge before acceptance. Payment is requested only after the job is completed.
+          </div>
+
+          <div class="d-grid">
+            {{ form.submit(class="btn btn-primary py-2 fw-semibold fs-6") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

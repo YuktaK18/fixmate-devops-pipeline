@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Provider Earnings & Settlements — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">Earnings & Payout Ledger</h3>
+      <p class="text-muted small mb-0">Track completed job payments, platform commissions, and escrow payout statuses (SRS 4.6.3).</p>
+    </div>
+  </div>
+
+  <!-- Summary Metric Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <div class="card card-fixmate card-stat p-3">
+        <span class="text-muted small text-uppercase fw-semibold">Gross Service Revenue</span>
+        <h3 class="fw-bold mb-0 text-dark">₹{{ total_gross }}</h3>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card card-fixmate card-stat-danger p-3">
+        <span class="text-muted small text-uppercase fw-semibold">Platform Commission (10%)</span>
+        <h3 class="fw-bold mb-0 text-danger">₹{{ total_commission }}</h3>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card card-fixmate card-stat-warning p-3">
+        <span class="text-muted small text-uppercase fw-semibold">Held in Escrow</span>
+        <h3 class="fw-bold mb-0 text-warning">₹{{ held_payout }}</h3>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card card-fixmate card-stat-success p-3">
+        <span class="text-muted small text-uppercase fw-semibold">Released to Bank</span>
+        <h3 class="fw-bold mb-0 text-success">₹{{ released_payout }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="card card-fixmate p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0">Settlement Transactions</h5>
+      <span class="badge bg-light text-dark border">{{ payments|length }} Records</span>
+    </div>
+
+    {% if payments %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Transaction Ref</th>
+              <th>Booking</th>
+              <th>Customer</th>
+              <th>Gross Service</th>
+              <th>10% Commission</th>
+              <th>Net Payout</th>
+              <th>Escrow Payout Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+              <tr>
+                <td class="text-muted">{{ p.paid_at.strftime('%d-%b-%Y') }}</td>
+                <td class="fw-bold text-primary">{{ p.transaction_reference }}</td>
+                <td>
+                  <a href="{{ url_for('provider.booking_detail', booking_id=p.booking_id) }}" class="text-decoration-none">
+                    #{{ p.booking.booking_code }}
+                  </a>
+                </td>
+                <td>{{ p.booking.customer.name }}</td>
+                <td class="fw-semibold">₹{{ p.subtotal }}</td>
+                <td class="text-danger">- ₹{{ p.commission_amount }}</td>
+                <td class="fw-bold text-success fs-6">₹{{ p.provider_payout_amount }}</td>
+                <td>
+                  {% if p.payout_status == 'RELEASED' %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> RELEASED</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark" title="Held for 24h or until customer confirms"><i class="bi bi-clock me-1"></i> HELD (24h Window)</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 bg-light rounded text-center small text-muted">
+        No payment records found yet. Once customers complete payment for your finished jobs, settlement records will show here.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

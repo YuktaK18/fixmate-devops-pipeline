@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms of Service — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card card-fixmate p-4 p-md-5">
+        <h2 class="fw-bold mb-3 text-primary">Terms of Service</h2>
+        <p class="text-muted small">Last updated: August 2026 | Document Reference: SRS Section 6.0</p>
+        <hr class="mb-4">
+
+        <h5 class="fw-bold">1. Agreement to Terms</h5>
+        <p class="small text-secondary">
+          By registering for or using FixMate ("Platform"), you agree to be bound by these Terms of Service. FixMate connects homeowners ("Customers") with independent background-verified workers ("Service Providers").
+        </p>
+
+        <h5 class="fw-bold mt-4">2. Service Provider Verification (KYC)</h5>
+        <p class="small text-secondary">
+          Every Service Provider must undergo identity and address verification before accepting bookings. Providers agree to upload authentic government-issued identity cards and proofs of address. Falsification of documents constitutes immediate termination and account suspension.
+        </p>
+
+        <h5 class="fw-bold mt-4">3. Booking and 5-Minute Acceptance Window</h5>
+        <p class="small text-secondary">
+          When a Customer requests a booking, the designated Provider has five (5) minutes to accept or decline the request. If the Provider does not respond within this window, the platform will automatically attempt to offer the job to the next best-matched available provider, or mark it as unassigned.
+        </p>
+
+        <h5 class="fw-bold mt-4">4. Cancellation and Late Fees</h5>
+        <p class="small text-secondary">
+          Customers may cancel any booking free of charge while in PENDING status. For confirmed and ACCEPTED bookings, cancellations initiated within fifteen (15) minutes of the scheduled appointment or on the same calendar date will incur a cancellation fee (default 10% of quoted price) to compensate the provider for reserved travel and preparation time.
+        </p>
+
+        <h5 class="fw-bold mt-4">5. Invoicing and Payments</h5>
+        <p class="small text-secondary">
+          All service bills include an 18% Goods & Services Tax (GST). A 10% platform commission is retained by FixMate. Payments are held in escrow until the customer confirms completion or after a 24-hour dispute-free window has passed.
+        </p>
+
+        <h5 class="fw-bold mt-4">6. Dispute and Complaints Policy</h5>
+        <p class="small text-secondary">
+          Customers may lodge formal complaints or dispute charges within seven (7) calendar days of service completion. Administrators review submitted evidence and reserve the right to issue partial or full refunds.
+        </p>
+
+        <div class="mt-4 p-3 bg-light rounded small text-muted">
+          <em>Note: This application has been created by Yukta Karwa as an academic software engineering project for Vivekanand Education Society's Institute of Technology (VESIT), Mumbai.</em>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card card-fixmate p-4 p-md-5">
+        <div class="text-center mb-4">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+            <i class="bi bi-person-plus-fill fs-4"></i>
+          </div>
+          <h3 class="fw-bold">Join FixMate</h3>
+          <p class="text-muted small">Connect with verified home service professionals</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.name.label(class="form-label fw-semibold small") }}
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Rahul Sharma") }}
+            {% for error in form.name.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              {{ form.email.label(class="form-label fw-semibold small") }}
+              {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="name@example.com") }}
+              {% for error in form.email.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.phone.label(class="form-label fw-semibold small") }}
+              {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="10-digit mobile number") }}
+              {% for error in form.phone.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            {{ form.role.label(class="form-label fw-semibold small") }}
+            {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else "")) }}
+            {% for error in form.role.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+            <div class="form-text small">Public registration is strictly limited to Customers and Service Providers.</div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              {{ form.password.label(class="form-label fw-semibold small") }}
+              {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="At least 8 characters") }}
+              {% for error in form.password.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.confirm_password.label(class="form-label fw-semibold small") }}
+              {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Confirm password") }}
+              {% for error in form.confirm_password.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mb-3 form-check">
+            {{ form.terms_accepted(class="form-check-input" + (" is-invalid" if form.terms_accepted.errors else "")) }}
+            <label class="form-check-label small" for="terms_accepted">
+              I agree to the <a href="{{ url_for('main.terms') }}" target="_blank">Terms of Service</a> and <a href="{{ url_for('main.privacy') }}" target="_blank">Privacy Policy</a>
+            </label>
+            {% for error in form.terms_accepted.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="d-grid mb-3">
+            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+          </div>
+
+          <div class="text-center mt-3">
+            <p class="small text-muted mb-0">Already have an account? <a href="{{ url_for('auth.login') }}" class="text-decoration-none fw-semibold">Sign in</a></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

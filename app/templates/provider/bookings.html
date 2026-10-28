@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Jobs Management — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">My Jobs</h3>
+      <p class="text-muted small mb-0">Accept booking requests within 5 minutes, update job progress, and record final billings.</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-pills mb-4 gap-2">
+    <li class="nav-item">
+      <a class="nav-link {% if current_tab == 'requests' %}active{% endif %}" href="{{ url_for('provider.bookings', tab='requests') }}">
+        <i class="bi bi-inbox me-1"></i> Requests (Pending)
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_tab == 'active' %}active{% endif %}" href="{{ url_for('provider.bookings', tab='active') }}">
+        <i class="bi bi-hourglass-split me-1"></i> Active / In-Progress
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_tab == 'completed' %}active{% endif %}" href="{{ url_for('provider.bookings', tab='completed') }}">
+        <i class="bi bi-check-circle me-1"></i> Completed
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_tab == 'all' %}active{% endif %}" href="{{ url_for('provider.bookings', tab='all') }}">
+        <i class="bi bi-list-task me-1"></i> All Jobs
+      </a>
+    </li>
+  </ul>
+
+  {% if jobs %}
+    <div class="row g-3">
+      {% for j in jobs %}
+        <div class="col-12">
+          <div class="card card-fixmate p-3 p-md-4">
+            <div class="row align-items-center g-3">
+              <div class="col-md-3">
+                <span class="badge badge-{{ j.status.lower() }} mb-2">{{ j.status }}</span>
+                {% if j.status == 'PENDING' and j.response_deadline %}
+                  <div class="mb-2" data-countdown-deadline="{{ j.response_deadline.isoformat() }}"></div>
+                {% endif %}
+                <h5 class="fw-bold mb-1">{{ j.category.name }}</h5>
+                <span class="text-muted small">Ref: <strong>#{{ j.booking_code }}</strong></span>
+              </div>
+
+              <div class="col-md-3 small">
+                <span class="text-muted d-block">Customer:</span>
+                <span class="fw-semibold text-dark">{{ j.customer.name }}</span>
+                <span class="text-muted d-block">{{ j.customer.phone }}</span>
+                <span class="text-muted d-block"><i class="bi bi-geo-alt text-danger me-1"></i>{{ j.service_address | truncate(35) }}</span>
+              </div>
+
+              <div class="col-md-3 small">
+                <span class="text-muted d-block">Date & Slot:</span>
+                <span class="fw-semibold text-dark">{{ j.scheduled_date.strftime('%d-%b-%Y') }}</span>
+                <span class="text-muted d-block">{{ j.scheduled_time_slot }}</span>
+              </div>
+
+              <div class="col-md-3 text-md-end">
+                <span class="text-muted small d-block">Amount:</span>
+                <span class="fs-5 fw-bold text-success d-block mb-2">₹{{ j.final_amount if j.final_amount else j.quoted_amount }}</span>
+                <a href="{{ url_for('provider.booking_detail', booking_id=j.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                  Manage Job &rarr;
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card card-fixmate p-5 text-center bg-light">
+      <i class="bi bi-briefcase fs-1 text-muted d-block mb-3"></i>
+      <h5 class="fw-bold">No jobs in this category</h5>
+      <p class="small text-muted mb-0">No records found under {{ current_tab }}.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

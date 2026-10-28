@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Review KYC: {{ profile.user.name }} — FixMate Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+      <a href="{{ url_for('admin.providers') }}" class="small text-decoration-none text-muted mb-1 d-inline-block">
+        <i class="bi bi-arrow-left me-1"></i> Back to Providers
+      </a>
+      <h3 class="fw-bold mb-0">KYC Application Review: {{ profile.user.name }}</h3>
+      <span class="text-muted small">Registered: {{ profile.user.created_at.strftime('%d-%b-%Y') }}</span>
+    </div>
+    <div>
+      <span class="badge bg-{{ 'success' if profile.verification_status == 'APPROVED' else ('warning text-dark' if profile.verification_status == 'PENDING' else 'danger') }} fs-6 px-3 py-2">
+        Status: {{ profile.verification_status }}
+      </span>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Verification Documents -->
+    <div class="col-lg-7">
+      <div class="card card-fixmate p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="bi bi-shield-lock-fill text-primary me-2"></i>Uploaded Verification Documents</h5>
+        <p class="small text-muted mb-4">Files are stored securely outside the static directory and served via authenticated admin route.</p>
+
+        {% if profile.documents %}
+          <div class="list-group">
+            {% for d in profile.documents %}
+              <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                <div>
+                  <h6 class="fw-bold mb-1">
+                    {% if d.document_type == 'ID_PROOF' %}
+                      <i class="bi bi-person-badge text-primary me-2"></i> Government Photo ID Proof
+                    {% else %}
+                      <i class="bi bi-house-door text-success me-2"></i> Proof of Residential Address
+                    {% endif %}
+                  </h6>
+                  <span class="text-muted small">Filename: {{ d.original_filename }} &bull; Size: {{ (d.file_size / 1024)|round(1) }} KB &bull; Type: {{ d.mime_type }}</span>
+                </div>
+                <div>
+                  <a href="{{ url_for('admin.view_document', document_id=d.id) }}" target="_blank" class="btn btn-outline-primary btn-sm px-3">
+                    <i class="bi bi-eye me-1"></i> Inspect File
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="alert alert-warning small mb-0">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> No documents uploaded yet by this provider.
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Professional Details -->
+      <div class="card card-fixmate p-4">
+        <h5 class="fw-bold mb-3">Applicant Professional Profile</h5>
+        <div class="row g-3 small">
+          <div class="col-6">
+            <span class="text-muted d-block">Operating Locality:</span>
+            <span class="fw-semibold text-dark">{{ profile.service_area_name }}</span>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Pincode & Radius:</span>
+            <span class="fw-semibold text-dark">{{ profile.service_pincode }} ({{ profile.service_radius_km }} km)</span>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Experience:</span>
+            <span class="fw-semibold text-dark">{{ profile.experience_years }} Years</span>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Availability:</span>
+            <span class="badge bg-light text-dark border">{{ profile.availability_status }}</span>
+          </div>
+          <div class="col-12">
+            <span class="text-muted d-block">Professional Bio:</span>
+            <p class="text-secondary mb-0">{{ profile.bio or 'No bio provided.' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Verification Action Form -->
+    <div class="col-lg-5">
+      <div class="card card-fixmate p-4 p-md-5">
+        <h5 class="fw-bold mb-3">Admin Decision Form</h5>
+        <p class="small text-muted mb-4">Approving makes provider bookable. Rejecting notifies provider with mandatory reason.</p>
+
+        <form method="POST" action="{{ url_for('admin.provider_review', profile_id=profile.id) }}">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.action.label(class="form-label fw-semibold small") }}
+            {{ form.action(class="form-select") }}
+          </div>
+
+          <div class="mb-4">
+            {{ form.rejection_reason.label(class="form-label fw-semibold small") }}
+            {{ form.rejection_reason(class="form-control", rows="4", placeholder="Explain why the documents were rejected (e.g. ID photo blurry, address does not match entered pincode)...") }}
+            <div class="form-text small text-muted">Mandatory if selecting 'Reject Application'.</div>
+          </div>
+
+          <div class="d-grid">
+            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+          </div>
+        </form>
+
+        {% if profile.verified_at %}
+          <div class="mt-4 pt-3 border-top small text-muted">
+            Last reviewed on {{ profile.verified_at.strftime('%d-%b-%Y at %H:%M') }}.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

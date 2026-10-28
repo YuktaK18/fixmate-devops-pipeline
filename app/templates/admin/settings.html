@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings & Policy Rules — FixMate Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card card-fixmate p-4 p-md-5">
+        <h4 class="fw-bold mb-1">Platform Rules & Business Settings</h4>
+        <p class="small text-muted mb-4">Configure system-wide parameters (Commission, GST, and Cancellation policies per SRS Appendix C).</p>
+
+        <form method="POST" action="{{ url_for('admin.settings') }}">
+          {{ form.hidden_tag() }}
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              {{ form.commission_percentage.label(class="form-label fw-semibold small") }}
+              <div class="input-group">
+                {{ form.commission_percentage(class="form-control" + (" is-invalid" if form.commission_percentage.errors else "")) }}
+                <span class="input-group-text">%</span>
+              </div>
+              {% for error in form.commission_percentage.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text small">Platform fee deducted from provider billing.</div>
+            </div>
+
+            <div class="col-md-6">
+              {{ form.gst_percentage.label(class="form-label fw-semibold small") }}
+              <div class="input-group">
+                {{ form.gst_percentage(class="form-control" + (" is-invalid" if form.gst_percentage.errors else "")) }}
+                <span class="input-group-text">%</span>
+              </div>
+              {% for error in form.gst_percentage.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text small">Tax calculated on service subtotal.</div>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              {{ form.cancellation_fee_percentage.label(class="form-label fw-semibold small") }}
+              <div class="input-group">
+                {{ form.cancellation_fee_percentage(class="form-control" + (" is-invalid" if form.cancellation_fee_percentage.errors else "")) }}
+                <span class="input-group-text">%</span>
+              </div>
+              {% for error in form.cancellation_fee_percentage.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text small">Late cancellation charge.</div>
+            </div>
+
+            <div class="col-md-6">
+              {{ form.cancellation_window_minutes.label(class="form-label fw-semibold small") }}
+              <div class="input-group">
+                {{ form.cancellation_window_minutes(class="form-control" + (" is-invalid" if form.cancellation_window_minutes.errors else "")) }}
+                <span class="input-group-text">Min</span>
+              </div>
+              {% for error in form.cancellation_window_minutes.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text small">Window before appointment considered late.</div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-light rounded border mb-4 small text-muted">
+            <i class="bi bi-info-circle-fill text-primary me-1"></i>
+            <strong>SRS Specification Reference:</strong> Items marked as <em>To Be Determined (TBD-2, TBD-4)</em> in SRS Appendix C default to sensible production standards (Commission: 10%, Late Fee: 10%, Window: 15 mins, GST: 18%).
+          </div>
+
+          <div class="d-grid">
+            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,383 @@
+{
+  "info": {
+    "name": "FixMate API & Endpoint Collection",
+    "_postman_id": "fixmate-v1-collection-2026",
+    "description": "Comprehensive Postman collection for FixMate Home Service Management System. Covers Health, Auth, Customer, Provider, Admin, and Simulated Payments endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:5000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Public API Endpoints",
+      "item": [
+        {
+          "name": "1. System Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health"]
+            },
+            "description": "Returns operational status, MySQL connectivity status, and environment mode."
+          }
+        },
+        {
+          "name": "2. List Active Service Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories"]
+            },
+            "description": "Returns JSON catalog of all active service categories with base price limits."
+          }
+        },
+        {
+          "name": "3. Search Approved Providers by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/providers?category_id=1&pincode=400071",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "providers"],
+              "query": [
+                { "key": "category_id", "value": "1" },
+                { "key": "pincode", "value": "400071" }
+              ]
+            },
+            "description": "Searches verified providers offering the category, sorted by rating or distance."
+          }
+        },
+        {
+          "name": "4. Check Provider Live Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/providers/1/availability",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "providers", "1", "availability"]
+            },
+            "description": "Queries provider's current status (AVAILABLE, BUSY, OFFLINE) and booked slots."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication (SRS 4.1)",
+      "item": [
+        {
+          "name": "1. Customer Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "name", "value": "Ananya Sharma" },
+                { "key": "email", "value": "ananya@example.com" },
+                { "key": "phone", "value": "9820011223" },
+                { "key": "role", "value": "customer" },
+                { "key": "password", "value": "Customer@123" },
+                { "key": "confirm_password", "value": "Customer@123" },
+                { "key": "terms_accepted", "value": "y" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "2. User Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "email", "value": "rahul@fixmate.local" },
+                { "key": "password", "value": "Customer@123" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "3. User Logout",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Booking & Lifecycle (SRS 4.4)",
+      "item": [
+        {
+          "name": "1. Create Booking Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "provider_id", "value": "2" },
+                { "key": "category_id", "value": "1" },
+                { "key": "scheduled_date", "value": "2026-10-30" },
+                { "key": "scheduled_time_slot", "value": "11:00 - 01:00 PM" },
+                { "key": "service_address", "value": "Flat 302, Green View Apts, Chembur East, Mumbai" },
+                { "key": "pincode", "value": "400071" },
+                { "key": "special_instructions", "value": "Kitchen sink pipe is leaking heavily under the counter." }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/customer/book",
+              "host": ["{{base_url}}"],
+              "path": ["customer", "book"]
+            }
+          }
+        },
+        {
+          "name": "2. Cancel Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "cancellation_reason", "value": "Found alternative local assistance." }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/customer/bookings/1/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["customer", "bookings", "1", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "3. Submit Post-Completion Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "rating", "value": "5" },
+                { "key": "comment", "value": "Outstanding plumbing repair. Arrived right on time and fixed the leak cleanly!" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/customer/bookings/1/review",
+              "host": ["{{base_url}}"],
+              "path": ["customer", "bookings", "1", "review"]
+            }
+          }
+        },
+        {
+          "name": "4. Lodge Dispute Complaint",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "subject", "value": "Leak restarted after technician departed" },
+                { "key": "description", "value": "The pipe joint gave way again 2 hours after completion. Requesting technician revisit or refund." }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/customer/bookings/1/complaint",
+              "host": ["{{base_url}}"],
+              "path": ["customer", "bookings", "1", "complaint"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provider Operations (SRS 4.2 & 4.4)",
+      "item": [
+        {
+          "name": "1. Accept Booking",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/provider/bookings/1/accept",
+              "host": ["{{base_url}}"],
+              "path": ["provider", "bookings", "1", "accept"]
+            }
+          }
+        },
+        {
+          "name": "2. Start Job (In Progress)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/provider/bookings/1/start",
+              "host": ["{{base_url}}"],
+              "path": ["provider", "bookings", "1", "start"]
+            }
+          }
+        },
+        {
+          "name": "3. Complete Job with Final Amount",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "final_amount", "value": "450.00" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/provider/bookings/1/complete",
+              "host": ["{{base_url}}"],
+              "path": ["provider", "bookings", "1", "complete"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Simulated Payments & Invoicing (SRS 4.6)",
+      "item": [
+        {
+          "name": "1. Process Simulated Payment (UPI / Card)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "payment_method", "value": "UPI" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/checkout/1",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "checkout", "1"]
+            }
+          }
+        },
+        {
+          "name": "2. Download Official PDF Invoice",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/customer/invoices/1/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["customer", "invoices", "1", "pdf"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Management (SRS 4.8)",
+      "item": [
+        {
+          "name": "1. View Platform Analytics Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "2. Approve Provider KYC Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "action", "value": "APPROVE" },
+                { "key": "rejection_reason", "value": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/providers/2",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "providers", "2"]
+            }
+          }
+        },
+        {
+          "name": "3. Update System Settings (Commission, Fee, GST)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "commission_percentage", "value": "10.0" },
+                { "key": "cancellation_fee_percentage", "value": "10.0" },
+                { "key": "cancellation_window_minutes", "value": "15" },
+                { "key": "gst_percentage", "value": "18.0" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/settings",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "settings"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

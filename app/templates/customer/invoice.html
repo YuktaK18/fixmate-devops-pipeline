@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Tax Invoice {{ invoice.invoice_number }} — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="{{ url_for('customer.booking_detail', booking_id=invoice.booking_id) }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Back to Booking
+    </a>
+    <div class="d-flex gap-2">
+      <button onclick="window.print()" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-printer me-1"></i> Print
+      </button>
+      <a href="{{ url_for('customer.invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Invoice
+      </a>
+    </div>
+  </div>
+
+  <div class="invoice-box shadow-sm mx-auto" style="max-width: 800px;">
+    <!-- Invoice Header -->
+    <div class="d-flex justify-content-between align-items-start pb-4 border-bottom mb-4">
+      <div>
+        <h3 class="fw-bold text-primary mb-1">FixMate</h3>
+        <span class="text-muted small d-block">Home Service Management Platform</span>
+        <span class="text-muted small">GSTIN: <strong>27AABCF1234F1Z5</strong> (Maharashtra)</span>
+      </div>
+      <div class="text-end">
+        <span class="badge bg-success-subtle text-success fs-6 mb-2">PAID</span>
+        <h5 class="fw-bold mb-0">TAX INVOICE</h5>
+        <span class="text-muted small">Invoice No: <strong>{{ invoice.invoice_number }}</strong></span><br/>
+        <span class="text-muted small">Date: {{ invoice.generated_at.strftime('%d-%b-%Y %H:%M') }}</span>
+      </div>
+    </div>
+
+    <!-- Parties Information -->
+    <div class="row g-4 mb-4 small">
+      <div class="col-md-6">
+        <h6 class="fw-bold text-muted text-uppercase mb-2">Billed To (Customer):</h6>
+        <p class="mb-1 fw-bold text-dark fs-6">{{ invoice.customer_name }}</p>
+        <p class="text-muted mb-1">{{ invoice.booking.service_address }}</p>
+        <p class="text-muted mb-0">Pincode: {{ invoice.booking.pincode }}</p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <h6 class="fw-bold text-muted text-uppercase mb-2">Service Provider:</h6>
+        <p class="mb-1 fw-bold text-dark fs-6">{{ invoice.provider_name }}</p>
+        <p class="text-muted mb-1">Status: Verified FixMate Partner</p>
+        <p class="text-muted mb-0">Transaction Ref: {{ invoice.payment.transaction_reference }}</p>
+      </div>
+    </div>
+
+    <!-- Table of Charges (SRS 4.6 & 6.0 Tax Compliance) -->
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered align-middle small mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Service Description</th>
+            <th>Service Date & Slot</th>
+            <th class="text-end">Amount (INR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong>{{ invoice.service_title }}</strong><br/>
+              <span class="text-muted">Booking Reference #{{ invoice.booking.booking_code }}</span>
+            </td>
+            <td>
+              {{ invoice.booking.scheduled_date.strftime('%d-%b-%Y') }}<br/>
+              <span class="text-muted">{{ invoice.booking.scheduled_time_slot }}</span>
+            </td>
+            <td class="text-end fw-semibold">₹{{ invoice.subtotal }}</td>
+          </tr>
+          <tr>
+            <td colspan="2" class="text-end fw-semibold">Subtotal:</td>
+            <td class="text-end fw-bold">₹{{ invoice.subtotal }}</td>
+          </tr>
+          <tr>
+            <td colspan="2" class="text-end text-muted">
+              Goods & Services Tax (GST @ {{ invoice.gst_rate }}%):<br/>
+              <span style="font-size: 0.75rem;">(CGST 9% + SGST 9%)</span>
+            </td>
+            <td class="text-end text-muted">₹{{ invoice.gst_amount }}</td>
+          </tr>
+          <tr class="table-success">
+            <td colspan="2" class="text-end fw-bold fs-6">Total Amount Paid:</td>
+            <td class="text-end fw-bold fs-6 text-success">₹{{ invoice.total_amount }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="p-3 bg-light rounded text-center small text-muted">
+      Payment Method: <strong>{{ invoice.payment.payment_method }}</strong> | Transaction Ref: <strong>{{ invoice.payment.transaction_reference }}</strong><br/>
+      <em>This is a computer-generated tax invoice for the VESIT Academic FixMate project.</em>
+    </div>
+  </div>
+</div>
+{% endblock %}

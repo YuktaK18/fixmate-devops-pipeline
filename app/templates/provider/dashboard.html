@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block title %}Provider Dashboard — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Provider Header & Availability Status -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+    <div class="d-flex align-items-center">
+      <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold fs-3" style="width: 56px; height: 56px;">
+        {{ current_user.name[:1] }}
+      </div>
+      <div>
+        <h3 class="fw-bold mb-1">{{ current_user.name }}</h3>
+        <span class="text-muted small">Service Provider &bull; {{ profile.service_area_name }} (PIN: {{ profile.service_pincode }})</span>
+      </div>
+    </div>
+    <div class="text-end mt-2 mt-md-0">
+      <span class="small text-muted d-block">Current Availability:</span>
+      {% if profile.availability_status == 'AVAILABLE' %}
+        <span class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-circle-fill me-1 small"></i> AVAILABLE</span>
+      {% elif profile.availability_status == 'BUSY' %}
+        <span class="badge bg-warning text-dark fs-6 px-3 py-2"><i class="bi bi-dash-circle-fill me-1 small"></i> BUSY</span>
+      {% else %}
+        <span class="badge bg-secondary fs-6 px-3 py-2"><i class="bi bi-power me-1 small"></i> OFFLINE</span>
+      {% endif %}
+      <a href="{{ url_for('provider.profile') }}" class="btn btn-outline-secondary btn-sm ms-2 rounded-pill">Change</a>
+    </div>
+  </div>
+
+  <!-- KYC Verification Status Banner (SRS 4.2) -->
+  {% if profile.verification_status == 'APPROVED' %}
+    <div class="alert alert-success d-flex align-items-center mb-4 shadow-sm" role="alert">
+      <i class="bi bi-patch-check-fill fs-4 me-3 text-success"></i>
+      <div>
+        <strong class="d-block">Account Fully Approved & Verified</strong>
+        <span class="small">Your documents have been verified by administration. You are visible in customer searches and can accept bookings.</span>
+      </div>
+    </div>
+  {% elif profile.verification_status == 'PENDING' %}
+    <div class="alert alert-warning d-flex align-items-center mb-4 shadow-sm" role="alert">
+      <i class="bi bi-hourglass-split fs-4 me-3 text-warning"></i>
+      <div class="flex-grow-1">
+        <strong class="d-block">Verification Application Under Admin Review</strong>
+        <span class="small">Your account must be approved before you can accept customer bookings or appear in public search results.</span>
+      </div>
+      <a href="{{ url_for('provider.documents') }}" class="btn btn-warning btn-sm fw-semibold">Check KYC Documents</a>
+    </div>
+  {% elif profile.verification_status == 'REJECTED' %}
+    <div class="alert alert-danger d-flex align-items-center mb-4 shadow-sm" role="alert">
+      <i class="bi bi-exclamation-octagon-fill fs-4 me-3 text-danger"></i>
+      <div class="flex-grow-1">
+        <strong class="d-block">Verification Application Rejected</strong>
+        <span class="small">Reason: <strong>{{ profile.rejection_reason or 'Document illegible or incomplete.' }}</strong></span>
+      </div>
+      <a href="{{ url_for('provider.documents') }}" class="btn btn-danger btn-sm">Re-upload Documents</a>
+    </div>
+  {% endif %}
+
+  <!-- Auto-flagging alert if rating < 3.0 (SRS 5.5) -->
+  {% if profile.is_flagged_for_review %}
+    <div class="alert alert-danger mb-4 shadow-sm">
+      <i class="bi bi-flag-fill me-2"></i>
+      <strong>Quality Standard Notice:</strong> Your average rating has dropped to {{ profile.rating_avg }} (below FixMate's 3.0 standard). Your account has been flagged for administrative review.
+    </div>
+  {% endif %}
+
+  <!-- Key Metrics Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <div class="card card-fixmate card-stat p-3">
+        <span class="text-muted small text-uppercase fw-semibold">Pending Requests</span>
+        <h3 class="fw-bold mb-0 text-primary">{{ pending_requests|length }}</h3>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card card-fixmate card-stat-success p-3">
+        <span class="text-muted small text-uppercase fw-semibold">Net Payout Earned</span>
+        <h3 class="fw-bold mb-0 text-success">₹{{ total_net_payout }}</h3>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card card-fixmate card-stat-warning p-3">
+        <span class="text-muted small text-uppercase fw-semibold">Average Rating</span>
+        <h3 class="fw-bold mb-0 text-warning">★ {{ profile.rating_avg }} <span class="fs-6 text-muted">({{ profile.rating_count }})</span></h3>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card card-fixmate p-3">
+        <span class="text-muted small text-uppercase fw-semibold">Completed Jobs</span>
+        <h3 class="fw-bold mb-0 text-dark">{{ profile.completed_jobs_count }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Requests (5-minute response window) -->
+  <div class="card card-fixmate p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0">Incoming Booking Requests</h5>
+      <span class="badge bg-primary rounded-pill">{{ pending_requests|length }} New</span>
+    </div>
+
+    {% if pending_requests %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Ref Code</th>
+              <th>Customer</th>
+              <th>Scheduled Slot</th>
+              <th>Address</th>
+              <th>Amount</th>
+              <th>Time Left (5-Min SLA)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in pending_requests %}
+              <tr>
+                <td class="fw-bold text-primary">#{{ r.booking_code }}</td>
+                <td>
+                  <strong>{{ r.customer.name }}</strong><br/>
+                  <span class="text-muted">{{ r.customer.phone }}</span>
+                </td>
+                <td>
+                  {{ r.scheduled_date.strftime('%d-%b-%Y') }}<br/>
+                  <span class="text-muted">{{ r.scheduled_time_slot }}</span>
+                </td>
+                <td>{{ r.service_address | truncate(35) }} ({{ r.pincode }})</td>
+                <td class="fw-bold">₹{{ r.quoted_amount }}</td>
+                <td>
+                  {% if r.response_deadline %}
+                    <div data-countdown-deadline="{{ r.response_deadline.isoformat() }}"></div>
+                  {% else %}
+                    <span class="badge bg-secondary">Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="d-flex gap-1">
+                    <form method="POST" action="{{ url_for('provider.accept_booking', booking_id=r.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-success btn-sm px-3" {% if not profile.is_approved %}disabled title="Account must be approved"{% endif %}>
+                        Accept
+                      </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('provider.reject_booking', booking_id=r.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-outline-danger btn-sm px-2">
+                        Decline
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 bg-light rounded text-center small text-muted">
+        <i class="bi bi-inbox fs-3 d-block mb-1"></i>
+        No incoming requests waiting. New customer bookings will appear here with an active 5-minute timer.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Active Jobs -->
+  <div class="card card-fixmate p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0">Active / Upcoming Jobs</h5>
+      <a href="{{ url_for('provider.bookings') }}" class="small text-decoration-none">View All Jobs</a>
+    </div>
+
+    {% if active_jobs %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Ref Code</th>
+              <th>Customer</th>
+              <th>Date & Slot</th>
+              <th>Address</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for j in active_jobs %}
+              <tr>
+                <td class="fw-bold text-primary">#{{ j.booking_code }}</td>
+                <td>{{ j.customer.name }} ({{ j.customer.phone }})</td>
+                <td>{{ j.scheduled_date.strftime('%d-%b-%Y') }} ({{ j.scheduled_time_slot }})</td>
+                <td>{{ j.service_address | truncate(35) }}</td>
+                <td><span class="badge badge-{{ j.status.lower() }}">{{ j.status }}</span></td>
+                <td>
+                  <a href="{{ url_for('provider.booking_detail', booking_id=j.id) }}" class="btn btn-outline-primary btn-sm">
+                    Manage Job
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 bg-light rounded text-center small text-muted">
+        No active jobs currently in progress.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

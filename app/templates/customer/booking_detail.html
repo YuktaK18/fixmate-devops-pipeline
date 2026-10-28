@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking #{{ booking.booking_code }} — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Top Breadcrumb & Status Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+    <div>
+      <a href="{{ url_for('customer.bookings') }}" class="small text-decoration-none text-muted mb-1 d-inline-block">
+        <i class="bi bi-arrow-left me-1"></i> Back to My Bookings
+      </a>
+      <h3 class="fw-bold mb-1">Booking #{{ booking.booking_code }}</h3>
+      <span class="text-muted small">Placed on {{ booking.created_at.strftime('%d-%b-%Y at %H:%M') }}</span>
+    </div>
+    <div class="text-end">
+      <span class="badge badge-{{ booking.status.lower() }} fs-6 px-3 py-2">{{ booking.status }}</span>
+      {% if booking.status == 'PENDING' and booking.response_deadline %}
+        <div class="mt-2" data-countdown-deadline="{{ booking.response_deadline.isoformat() }}"></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Reschedule Proposal Alert (If active) -->
+  {% if booking.status == 'RESCHEDULED' %}
+    <div class="alert alert-warning shadow-sm mb-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h6 class="fw-bold mb-1"><i class="bi bi-clock-history me-1"></i> Reschedule Proposal Pending</h6>
+          <p class="small mb-0">
+            {% if booking.reschedule_requested_by_id == current_user.id %}
+              You requested to reschedule this appointment to <strong>{{ booking.reschedule_proposed_date.strftime('%d-%b-%Y') }} ({{ booking.reschedule_proposed_time_slot }})</strong>. Awaiting technician's confirmation.
+            {% else %}
+              The provider proposed rescheduling this job to <strong>{{ booking.reschedule_proposed_date.strftime('%d-%b-%Y') }} ({{ booking.reschedule_proposed_time_slot }})</strong>.
+            {% endif %}
+          </p>
+        </div>
+        {% if booking.reschedule_requested_by_id != current_user.id %}
+          <form method="POST" action="{{ url_for('customer.respond_reschedule', booking_id=booking.id) }}" class="d-flex gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" name="action" value="accept" class="btn btn-sm btn-success">Accept New Time</button>
+            <button type="submit" name="action" value="decline" class="btn btn-sm btn-outline-danger">Decline</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Simulated Live ETA & Status Tracker (SRS 4.5) -->
+  {% if booking.status in ['ACCEPTED', 'IN_PROGRESS'] %}
+    <div class="card card-fixmate bg-primary-subtle border-0 p-4 mb-4" id="live-eta-tracker" data-booking-id="{{ booking.id }}">
+      <div class="d-flex flex-wrap justify-content-between align-items-center">
+        <div>
+          <span class="badge bg-primary text-white mb-2">Simulated Live Arrival Tracking (Demo Mode)</span>
+          <h5 class="fw-bold mb-1" id="tracking-status-text">
+            {% if booking.status == 'ACCEPTED' %}
+              Provider {{ booking.provider.name }} is preparing tools and route.
+            {% else %}
+              Provider is on-site. Job is IN PROGRESS.
+            {% endif %}
+          </h5>
+          <p class="small text-muted mb-0">Technician Phone: <strong>{{ booking.provider.phone }}</strong></p>
+        </div>
+        <div class="text-end">
+          <span class="small text-muted d-block">Estimated Arrival (ETA):</span>
+          <span class="fs-4 fw-bold text-primary" id="tracking-eta-badge">
+            {% if booking.status == 'ACCEPTED' %}~25 mins{% else %}On Site{% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- Left Details Column -->
+    <div class="col-lg-7">
+      <div class="card card-fixmate p-4 mb-4">
+        <h5 class="fw-bold mb-3">Service & Appointment Details</h5>
+        <div class="row g-3 small">
+          <div class="col-6">
+            <span class="text-muted d-block">Service Category:</span>
+            <span class="fw-bold text-dark fs-6">{{ booking.category.name }}</span>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Scheduled Slot:</span>
+            <span class="fw-bold text-dark fs-6">{{ booking.scheduled_date.strftime('%d-%b-%Y') }}</span>
+            <span class="text-muted d-block">{{ booking.scheduled_time_slot }}</span>
+          </div>
+          <div class="col-12">
+            <span class="text-muted d-block">Service Location Address:</span>
+            <span class="fw-semibold text-dark">{{ booking.service_address }}</span>
+            <span class="text-muted d-block">Pincode: {{ booking.pincode }}</span>
+            <a href="https://maps.google.com/?q={{ booking.service_address|urlencode }}+{{ booking.pincode }}" target="_blank" class="small text-decoration-none mt-1 d-inline-block">
+              <i class="bi bi-geo-alt-fill text-danger me-1"></i> Open in Google Maps
+            </a>
+          </div>
+          {% if booking.special_instructions %}
+            <div class="col-12">
+              <span class="text-muted d-block">Special Instructions:</span>
+              <span class="fst-italic text-secondary">{{ booking.special_instructions }}</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Action Buttons Card -->
+      <div class="card card-fixmate p-4 mb-4">
+        <h5 class="fw-bold mb-3">Booking Actions</h5>
+        <div class="d-flex flex-wrap gap-2">
+          <!-- Payment Action -->
+          {% if booking.status == 'COMPLETED' and not booking.payment %}
+            <a href="{{ url_for('payments.checkout', booking_id=booking.id) }}" class="btn btn-success fw-semibold px-4">
+              <i class="bi bi-credit-card-2-front me-1"></i> Pay Now (₹{{ booking.final_amount or booking.quoted_amount }})
+            </a>
+          {% endif %}
+
+          <!-- Invoice Actions -->
+          {% if booking.payment %}
+            <a href="{{ url_for('customer.invoice_detail', invoice_id=booking.payment.invoice.id) }}" class="btn btn-outline-primary">
+              <i class="bi bi-receipt me-1"></i> View Tax Invoice
+            </a>
+            <a href="{{ url_for('customer.invoice_pdf', invoice_id=booking.payment.invoice.id) }}" class="btn btn-primary">
+              <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Invoice
+            </a>
+          {% endif %}
+
+          <!-- Reschedule Button (for ACCEPTED bookings) -->
+          {% if booking.status in ['ACCEPTED', 'RESCHEDULED'] %}
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#rescheduleModal">
+              <i class="bi bi-calendar-event me-1"></i> Request Reschedule
+            </button>
+          {% endif %}
+
+          <!-- Cancellation Button -->
+          {% if booking.status in ['PENDING', 'ACCEPTED', 'RESCHEDULED'] %}
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+              <i class="bi bi-x-circle me-1"></i> Cancel Booking
+            </button>
+          {% endif %}
+
+          <!-- One-click Rebooking -->
+          {% if booking.status == 'COMPLETED' %}
+            <a href="{{ url_for('customer.book_again', booking_id=booking.id) }}" class="btn btn-outline-primary">
+              <i class="bi bi-arrow-repeat me-1"></i> Book Again
+            </a>
+          {% endif %}
+
+          <!-- Leave Review -->
+          {% if booking.status == 'COMPLETED' and not booking.review %}
+            <button type="button" class="btn btn-warning text-dark fw-semibold" data-bs-toggle="modal" data-bs-target="#reviewModal">
+              <i class="bi bi-star-fill me-1"></i> Rate & Review
+            </button>
+          {% endif %}
+
+          <!-- File Complaint (Within 7 days per SRS 4.7.3) -->
+          {% if booking.status == 'COMPLETED' and complaint_window_open %}
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#complaintModal">
+              <i class="bi bi-shield-exclamation me-1"></i> File Dispute (7-Day Window)
+            </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Submitted Review Display -->
+      {% if booking.review %}
+        <div class="card card-fixmate p-4 mb-4 border-warning-subtle">
+          <h6 class="fw-bold mb-2 text-warning"><i class="bi bi-star-fill me-1"></i> Your Submitted Review</h6>
+          <div class="star-rating mb-2">
+            {% for i in range(booking.review.rating) %}★{% endfor %}
+          </div>
+          <p class="small text-secondary mb-0">"{{ booking.review.comment or 'No comment provided.' }}"</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Provider Card & Status History Timeline -->
+    <div class="col-lg-5">
+      <!-- Assigned Provider Card -->
+      <div class="card card-fixmate p-4 mb-4">
+        <h6 class="fw-bold text-muted small text-uppercase mb-3">Assigned Service Provider</h6>
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold fs-4" style="width: 50px; height: 50px;">
+            {{ booking.provider.name[:1] }}
+          </div>
+          <div>
+            <h6 class="fw-bold mb-0">{{ booking.provider.name }}</h6>
+            <span class="badge bg-success-subtle text-success small" style="font-size: 0.7rem;"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+          </div>
+        </div>
+        <div class="small text-muted mb-3">
+          <div><i class="bi bi-telephone text-primary me-2"></i>{{ booking.provider.phone }}</div>
+          <div><i class="bi bi-star-fill text-warning me-2"></i>{{ booking.provider.provider_profile.rating_avg }} ({{ booking.provider.provider_profile.rating_count }} ratings)</div>
+          <div><i class="bi bi-geo-alt text-danger me-2"></i>{{ booking.provider.provider_profile.service_area_name }}</div>
+        </div>
+        <a href="{{ url_for('customer.provider_detail', provider_id=booking.provider_id) }}" class="btn btn-outline-secondary btn-sm w-100 rounded-pill">
+          View Full Profile
+        </a>
+      </div>
+
+      <!-- Pricing Summary -->
+      <div class="card card-fixmate p-4 mb-4">
+        <h6 class="fw-bold text-muted small text-uppercase mb-3">Payment Summary</h6>
+        <div class="d-flex justify-content-between small mb-2">
+          <span class="text-muted">Quoted Base Price:</span>
+          <span>₹{{ booking.quoted_amount }}</span>
+        </div>
+        {% if booking.final_amount and booking.final_amount != booking.quoted_amount %}
+          <div class="d-flex justify-content-between small mb-2 text-primary fw-semibold">
+            <span>Provider Confirmed Final Amount:</span>
+            <span>₹{{ booking.final_amount }}</span>
+          </div>
+        {% endif %}
+        {% if booking.cancellation_fee > 0 %}
+          <div class="d-flex justify-content-between small mb-2 text-danger fw-semibold">
+            <span>Late Cancellation Fee (10%):</span>
+            <span>₹{{ booking.cancellation_fee }}</span>
+          </div>
+        {% endif %}
+        <div class="d-flex justify-content-between small mb-2 text-muted">
+          <span>Taxes (GST 18%):</span>
+          <span>Included at Payment</span>
+        </div>
+        <hr class="my-2">
+        <div class="d-flex justify-content-between fw-bold">
+          <span>Status:</span>
+          <span class="text-{{ 'success' if booking.payment else 'muted' }}">
+            {{ 'PAID (' + booking.payment.payment_method + ')' if booking.payment else 'Pending Completion' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Status History Audit Trail (SRS 4.4 & 4.8) -->
+      <div class="card card-fixmate p-4">
+        <h6 class="fw-bold text-muted small text-uppercase mb-3">Booking Status Timeline</h6>
+        <div class="timeline small">
+          {% for h in booking.status_history %}
+            <div class="timeline-item">
+              <div class="timeline-badge">
+                <i class="bi bi-clock-history"></i>
+              </div>
+              <span class="fw-bold text-dark d-block">{{ h.new_status }}</span>
+              <span class="text-muted d-block" style="font-size: 0.75rem;">{{ h.created_at.strftime('%d-%b-%Y %H:%M') }}</span>
+              {% if h.notes %}
+                <p class="text-secondary mb-0 mt-1">{{ h.notes }}</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Booking Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('customer.cancel_booking', booking_id=booking.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="cancelModalLabel">Cancel Booking #{{ booking.booking_code }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body small">
+          <div class="alert alert-warning mb-3">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            <strong>Cancellation Policy Notice (SRS 5.5):</strong> Cancellations made on the scheduled service day for an accepted booking will incur a <strong>10% late cancellation fee</strong>.
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Reason for Cancellation</label>
+            <textarea name="cancellation_reason" class="form-control" rows="3" placeholder="Please let us know why you need to cancel..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Keep Booking</button>
+          <button type="submit" class="btn btn-danger btn-sm">Confirm Cancellation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Reschedule Request Modal -->
+<div class="modal fade" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('customer.request_reschedule', booking_id=booking.id) }}">
+        {{ reschedule_form.hidden_tag() }}
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="rescheduleModalLabel">Request Appointment Reschedule</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body small">
+          <p class="text-muted mb-3">Rescheduling requires mutual agreement between customer and technician (SRS 4.4.3).</p>
+          <div class="mb-3">
+            {{ reschedule_form.proposed_date.label(class="form-label fw-semibold") }}
+            {{ reschedule_form.proposed_date(class="form-control", min=now.strftime('%Y-%m-%d')) }}
+          </div>
+          <div class="mb-3">
+            {{ reschedule_form.proposed_time_slot.label(class="form-label fw-semibold") }}
+            {{ reschedule_form.proposed_time_slot(class="form-select") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+          {{ reschedule_form.submit(class="btn btn-primary btn-sm") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('customer.submit_review', booking_id=booking.id) }}">
+        {{ review_form.hidden_tag() }}
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="reviewModalLabel">Rate & Review {{ booking.provider.name }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body small">
+          <div class="mb-3">
+            {{ review_form.rating.label(class="form-label fw-semibold") }}
+            {{ review_form.rating(class="form-select") }}
+          </div>
+          <div class="mb-3">
+            {{ review_form.comment.label(class="form-label fw-semibold") }}
+            {{ review_form.comment(class="form-control", rows="3", placeholder="Share your experience with the technician's punctuality, skill, and cleanliness...") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          {{ review_form.submit(class="btn btn-warning text-dark fw-semibold btn-sm") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Complaint Modal (SRS 4.7.3) -->
+<div class="modal fade" id="complaintModal" tabindex="-1" aria-labelledby="complaintModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('customer.file_complaint', booking_id=booking.id) }}" enctype="multipart/form-data">
+        {{ complaint_form.hidden_tag() }}
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-danger" id="complaintModalLabel"><i class="bi bi-shield-exclamation me-1"></i> File Dispute Ticket</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body small">
+          <p class="text-muted mb-3">You can file a formal complaint within 7 days of service completion. An administrator will review your report and may issue a refund.</p>
+          <div class="mb-3">
+            {{ complaint_form.subject.label(class="form-label fw-semibold") }}
+            {{ complaint_form.subject(class="form-control", placeholder="e.g. Issue not resolved / Work incomplete") }}
+          </div>
+          <div class="mb-3">
+            {{ complaint_form.description.label(class="form-label fw-semibold") }}
+            {{ complaint_form.description(class="form-control", rows="4", placeholder="Explain the problem in detail...") }}
+          </div>
+          <div class="mb-3">
+            {{ complaint_form.photo.label(class="form-label fw-semibold") }}
+            {{ complaint_form.photo(class="form-control") }}
+            <div class="form-text">Attach evidence photo (JPG, PNG).</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          {{ complaint_form.submit(class="btn btn-danger btn-sm") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

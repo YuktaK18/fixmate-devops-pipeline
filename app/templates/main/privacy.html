@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card card-fixmate p-4 p-md-5">
+        <h2 class="fw-bold mb-3 text-primary">Privacy Policy</h2>
+        <p class="text-muted small">Last updated: August 2026 | Document Reference: SRS Section 2.5 & 5.3</p>
+        <hr class="mb-4">
+
+        <h5 class="fw-bold">1. Information We Collect</h5>
+        <p class="small text-secondary">
+          FixMate collects personal details provided during registration including full name, verified email address, phone number, and physical service addresses for job execution.
+        </p>
+
+        <h5 class="fw-bold mt-4">2. Document Storage and KYC Data</h5>
+        <p class="small text-secondary">
+          Provider identity verification documents (Government ID, Electricity Bills) are stored outside the public static folder with randomized UUID identifiers. Documents are accessible strictly via authenticated endpoints to authorized Administrators and the document owner.
+        </p>
+
+        <h5 class="fw-bold mt-4">3. Payment Information Security</h5>
+        <p class="small text-secondary">
+          Per SRS Section 5.3, FixMate servers NEVER store raw credit card numbers or CVV codes. All simulated checkout operations generate cryptographic transaction references without sensitive card data persistence.
+        </p>
+
+        <h5 class="fw-bold mt-4">4. Location and Notification Preferences</h5>
+        <p class="small text-secondary">
+          We use residential pincodes and area names to match customers with local service providers. Users may toggle off promotional notifications at any time while retaining essential transactional booking alerts.
+        </p>
+
+        <h5 class="fw-bold mt-4">5. Academic Project Notice</h5>
+        <p class="small text-secondary">
+          This system is developed as an academic project at VESIT (Vivekanand Education Society's Institute of Technology). All submitted mock data is stored safely in a local MySQL instance for educational evaluation.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

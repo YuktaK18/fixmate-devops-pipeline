@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Providers — FixMate Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">Provider KYC & Directory</h3>
+      <p class="text-muted small mb-0">Inspect identity documents, approve or reject applications with mandatory reasons (SRS 4.2 & 4.8).</p>
+    </div>
+  </div>
+
+  <!-- Filter Pills -->
+  <ul class="nav nav-pills mb-4 gap-2">
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'ALL' %}active{% endif %}" href="{{ url_for('admin.providers', status='ALL') }}">All Providers</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'PENDING' %}active{% endif %}" href="{{ url_for('admin.providers', status='PENDING') }}">
+        Pending KYC Review
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'APPROVED' %}active{% endif %}" href="{{ url_for('admin.providers', status='APPROVED') }}">Approved</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'REJECTED' %}active{% endif %}" href="{{ url_for('admin.providers', status='REJECTED') }}">Rejected</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'FLAGGED' %}active text-white bg-danger{% else %}text-danger{% endif %}" href="{{ url_for('admin.providers', status='FLAGGED') }}">
+        <i class="bi bi-flag-fill me-1"></i> Low Rating (&lt;3.0) Flagged
+      </a>
+    </li>
+  </ul>
+
+  <!-- Providers Table -->
+  <div class="card card-fixmate p-4">
+    {% if providers %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Provider</th>
+              <th>Service Area</th>
+              <th>KYC Status</th>
+              <th>Rating</th>
+              <th>Docs Uploaded</th>
+              <th>Experience</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in providers %}
+              <tr>
+                <td>
+                  <strong>{{ p.user.name }}</strong><br/>
+                  <span class="text-muted">{{ p.user.email }} &bull; {{ p.user.phone }}</span>
+                </td>
+                <td>
+                  {{ p.service_area_name }}<br/>
+                  <span class="text-muted">PIN: {{ p.service_pincode }}</span>
+                </td>
+                <td>
+                  {% if p.verification_status == 'APPROVED' %}
+                    <span class="badge bg-success">APPROVED</span>
+                  {% elif p.verification_status == 'PENDING' %}
+                    <span class="badge bg-warning text-dark">PENDING KYC</span>
+                  {% else %}
+                    <span class="badge bg-danger">REJECTED</span>
+                  {% endif %}
+
+                  {% if p.is_flagged_for_review %}
+                    <span class="badge bg-danger mt-1 d-block"><i class="bi bi-flag-fill me-1"></i> FLAGGED &lt;3.0</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="star-rating star-rating-sm">★ {{ p.rating_avg }}</span><br/>
+                  <span class="text-muted">({{ p.rating_count }} reviews)</span>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">
+                    {{ p.documents|length }} / 2 Documents
+                  </span>
+                </td>
+                <td>{{ p.experience_years }} Years</td>
+                <td>
+                  <a href="{{ url_for('admin.provider_review', profile_id=p.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="bi bi-file-earmark-check me-1"></i> Review KYC
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 bg-light rounded text-center small text-muted">
+        No providers found under filter "{{ current_filter }}".
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

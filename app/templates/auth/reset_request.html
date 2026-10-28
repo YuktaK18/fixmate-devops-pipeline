@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Reset Password — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card card-fixmate p-4 p-md-5">
+        <div class="text-center mb-4">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+            <i class="bi bi-envelope-check fs-4"></i>
+          </div>
+          <h4 class="fw-bold">Password Recovery</h4>
+          <p class="text-muted small">Enter your registered email address to receive password reset instructions.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.reset_password_request') }}" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.email.label(class="form-label fw-semibold small") }}
+            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="name@example.com") }}
+            {% for error in form.email.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="d-grid mb-3">
+            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+          </div>
+
+          <div class="text-center">
+            <a href="{{ url_for('auth.login') }}" class="small text-decoration-none">Back to Sign In</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} Experts — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Category Header Banner -->
+  <div class="card card-fixmate bg-primary-subtle border-0 p-4 mb-4">
+    <div class="d-flex align-items-center">
+      <div class="bg-primary text-white rounded p-3 me-3 fs-3">
+        <i class="bi {{ category.icon }}"></i>
+      </div>
+      <div>
+        <h3 class="fw-bold text-dark mb-1">{{ category.name }}</h3>
+        <p class="text-secondary small mb-0">{{ category.description }} (Admin Price Range: ₹{{ category.min_base_price }} - ₹{{ category.max_base_price }})</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Sorting Toolbar (SRS 4.3.3) -->
+  <div class="card card-fixmate p-3 mb-4">
+    <form method="GET" action="{{ url_for('customer.category_providers', slug=category.slug) }}" class="row g-2 align-items-center">
+      <div class="col-md-4">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white"><i class="bi bi-geo-alt text-danger"></i></span>
+          <input type="text" name="pincode" class="form-control" placeholder="Match Pincode / Area (e.g. 400071)" value="{{ pincode_query or '' }}">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select name="sort" class="form-select form-select-sm">
+          <option value="rating_desc" {% if sort_by == 'rating_desc' %}selected{% endif %}>Sort: Highest Rated</option>
+          <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Sort: Price (Low to High)</option>
+          <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Sort: Price (High to Low)</option>
+          <option value="jobs_desc" {% if sort_by == 'jobs_desc' %}selected{% endif %}>Sort: Most Completed Jobs</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="availability" class="form-select form-select-sm">
+          <option value="">Availability: All</option>
+          <option value="AVAILABLE" {% if request.args.get('availability') == 'AVAILABLE' %}selected{% endif %}>Available Now</option>
+          <option value="BUSY" {% if request.args.get('availability') == 'BUSY' %}selected{% endif %}>Busy</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Provider List -->
+  {% if providers %}
+    <div class="row g-4">
+      {% for prof in providers %}
+        {% set svc = prof.services | selectattr('category_id', 'equalto', category.id) | first %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-fixmate h-100 p-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 48px; height: 48px;">
+                  {{ prof.user.name[:1] }}
+                </div>
+                <div>
+                  <h6 class="fw-bold mb-0">{{ prof.user.name }}</h6>
+                  <span class="badge bg-success-subtle text-success small" style="font-size: 0.7rem;"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                </div>
+              </div>
+              <div>
+                {% if prof.availability_status == 'AVAILABLE' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle small">Available</span>
+                {% elif prof.availability_status == 'BUSY' %}
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle small">Busy</span>
+                {% else %}
+                  <span class="badge bg-secondary-subtle text-secondary small">Offline</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <p class="small text-secondary mb-2">{{ prof.bio or 'Experienced professional providing quality home services.' }}</p>
+
+            <div class="small text-muted mb-3">
+              <div><i class="bi bi-geo-alt text-danger me-1"></i> {{ prof.service_area_name }} (PIN: {{ prof.service_pincode }})</div>
+              <div><i class="bi bi-briefcase text-secondary me-1"></i> {{ prof.experience_years }} Years Professional Experience</div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded mb-3 small">
+              <div>
+                <span class="star-rating star-rating-sm">★ {{ prof.rating_avg }}</span>
+                <span class="text-muted">({{ prof.rating_count }} reviews)</span>
+              </div>
+              <div class="fw-bold text-dark">
+                {{ prof.completed_jobs_count }} Jobs Done
+              </div>
+            </div>
+
+            <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
+              <div>
+                <span class="text-muted small d-block">Service Rate:</span>
+                <span class="fs-5 fw-bold text-primary">₹{{ svc.custom_price if svc else prof.starting_price }}</span>
+              </div>
+              <div class="d-flex gap-2">
+                <a href="{{ url_for('customer.provider_detail', provider_id=prof.user_id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                  Profile
+                </a>
+                <a href="{{ url_for('customer.book_service', provider_id=prof.user_id, category_id=category.id) }}" class="btn btn-primary btn-sm rounded-pill px-3">
+                  Book Now
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card card-fixmate p-5 text-center bg-light">
+      <i class="bi bi-search fs-1 text-muted d-block mb-3"></i>
+      <h5 class="fw-bold">No verified providers matching your filter criteria.</h5>
+      <p class="small text-muted mb-3">Try adjusting your pincode search or clearing the availability filter.</p>
+      <div>
+        <a href="{{ url_for('customer.category_providers', slug=category.slug) }}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+          Reset Filters
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket #{{ complaint.ticket_number }} — FixMate Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+      <a href="{{ url_for('admin.complaints') }}" class="small text-decoration-none text-muted mb-1 d-inline-block">
+        <i class="bi bi-arrow-left me-1"></i> Back to Complaints
+      </a>
+      <h3 class="fw-bold mb-0">Dispute Investigation: #{{ complaint.ticket_number }}</h3>
+      <span class="text-muted small">Submitted on {{ complaint.created_at.strftime('%d-%b-%Y %H:%M') }}</span>
+    </div>
+    <div>
+      <span class="badge bg-{{ 'danger' if complaint.status == 'OPEN' else ('warning text-dark' if complaint.status == 'IN_REVIEW' else ('success' if complaint.status == 'RESOLVED' else 'secondary')) }} fs-6 px-3 py-2">
+        Status: {{ complaint.status }}
+      </span>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Dispute Evidence & Details -->
+    <div class="col-lg-7">
+      <div class="card card-fixmate p-4 mb-4">
+        <h5 class="fw-bold mb-3">Customer Statement & Details</h5>
+        <div class="row g-3 small mb-3">
+          <div class="col-6">
+            <span class="text-muted d-block">Complainant Customer:</span>
+            <span class="fw-bold text-dark fs-6">{{ complaint.customer.name }}</span>
+            <span class="text-muted d-block">{{ complaint.customer.email }} &bull; {{ complaint.customer.phone }}</span>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Accused Provider:</span>
+            <span class="fw-bold text-dark fs-6">{{ complaint.booking.provider.name }}</span>
+            <span class="text-muted d-block">{{ complaint.booking.provider.email }} &bull; {{ complaint.booking.provider.phone }}</span>
+          </div>
+          <div class="col-12">
+            <span class="text-muted d-block">Subject:</span>
+            <strong class="fs-6 text-danger">{{ complaint.subject }}</strong>
+          </div>
+          <div class="col-12">
+            <span class="text-muted d-block">Full Description:</span>
+            <div class="p-3 bg-light rounded text-secondary">{{ complaint.description }}</div>
+          </div>
+        </div>
+
+        {% if complaint.photo_filename %}
+          <div class="mt-3">
+            <span class="small text-muted d-block mb-2">Attached Evidence Photo:</span>
+            <img src="/static/uploads/complaints/{{ complaint.photo_filename }}" alt="Evidence" class="img-fluid rounded border" style="max-height: 300px;">
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Financial Transaction Info for Dispute -->
+      {% if complaint.booking.payment %}
+        <div class="card card-fixmate p-4 mb-4">
+          <h5 class="fw-bold mb-3">Transaction Details & Dispute Refund</h5>
+          <div class="row g-3 small mb-3">
+            <div class="col-6">
+              <span class="text-muted d-block">Transaction Reference:</span>
+              <span class="fw-bold">{{ complaint.booking.payment.transaction_reference }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block">Total Paid:</span>
+              <span class="fw-bold text-success fs-6">₹{{ complaint.booking.payment.amount }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block">Payment Method:</span>
+              <span>{{ complaint.booking.payment.payment_method }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block">Provider Payout:</span>
+              <span>₹{{ complaint.booking.payment.provider_payout_amount }} (Status: {{ complaint.booking.payment.payout_status }})</span>
+            </div>
+          </div>
+
+          <!-- Refund Form (SRS 4.6.3: Admin Full or Partial Refund) -->
+          <div class="p-3 bg-light rounded border">
+            <h6 class="fw-bold text-danger mb-2"><i class="bi bi-arrow-return-left me-1"></i> Issue Customer Refund</h6>
+            <form method="POST" action="{{ url_for('admin.refund_payment', payment_id=complaint.booking.payment.id) }}">
+              {{ refund_form.hidden_tag() }}
+              <div class="row g-2 mb-2">
+                <div class="col-md-5">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text">₹</span>
+                    {{ refund_form.refund_amount(class="form-control", value=complaint.booking.payment.amount) }}
+                  </div>
+                </div>
+                <div class="col-md-7">
+                  {{ refund_form.refund_reason(class="form-control form-control-sm", placeholder="Refund reason...") }}
+                </div>
+              </div>
+              <button type="submit" class="btn btn-danger btn-sm fw-semibold">Process Dispute Refund</button>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Resolution Workflow Form -->
+    <div class="col-lg-5">
+      <div class="card card-fixmate p-4 p-md-5">
+        <h5 class="fw-bold mb-3">Resolution Decision Form</h5>
+        <p class="small text-muted mb-4">Update dispute status and provide resolution explanation to customer.</p>
+
+        <form method="POST" action="{{ url_for('admin.complaint_detail', complaint_id=complaint.id) }}">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.status.label(class="form-label fw-semibold small") }}
+            {{ form.status(class="form-select") }}
+          </div>
+
+          <div class="mb-4">
+            {{ form.resolution_notes.label(class="form-label fw-semibold small") }}
+            {{ form.resolution_notes(class="form-control", rows="5", placeholder="Document the investigation findings and outcome communicated to the customer...") }}
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" name="update_ticket" class="btn btn-primary py-2 fw-semibold">Save Ticket Update</button>
+          </div>
+        </form>
+
+        {% if complaint.resolved_at %}
+          <div class="mt-4 pt-3 border-top small text-muted">
+            Last resolved on {{ complaint.resolved_at.strftime('%d-%b-%Y at %H:%M') }}.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Payments & Revenue Ledger — FixMate Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">Platform Revenue & Financial Settlements</h3>
+      <p class="text-muted small mb-0">Monitor transactions, GST collected, 10% platform commission, and release provider payouts (SRS 4.6 & 4.8).</p>
+    </div>
+  </div>
+
+  <div class="card card-fixmate p-4">
+    {% if payments %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Ref</th>
+              <th>Customer</th>
+              <th>Provider</th>
+              <th>Total (Inc. GST)</th>
+              <th>GST (18%)</th>
+              <th>Commission (10%)</th>
+              <th>Net Payout</th>
+              <th>Escrow Payout Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+              <tr>
+                <td class="text-muted" style="white-space: nowrap;">{{ p.paid_at.strftime('%d-%b %H:%M') }}</td>
+                <td class="fw-bold text-primary">{{ p.transaction_reference }}</td>
+                <td>{{ p.booking.customer.name }}</td>
+                <td>{{ p.booking.provider.name }}</td>
+                <td class="fw-bold fs-6">₹{{ p.amount }}</td>
+                <td class="text-muted">₹{{ p.gst_amount }}</td>
+                <td class="text-danger fw-semibold">₹{{ p.commission_amount }}</td>
+                <td class="text-success fw-bold">₹{{ p.provider_payout_amount }}</td>
+                <td>
+                  {% if p.payout_status == 'RELEASED' %}
+                    <span class="badge bg-success">RELEASED</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">HELD IN ESCROW</span>
+                  {% endif %}
+                  {% if p.status == 'REFUNDED' %}
+                    <span class="badge bg-danger mt-1 d-block">REFUNDED: ₹{{ p.refund_amount }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if p.payout_status == 'HELD' and p.status != 'REFUNDED' %}
+                    <form method="POST" action="{{ url_for('admin.release_payout', payment_id=p.id) }}" onsubmit="return confirm('Release payout of ₹{{ p.provider_payout_amount }} to provider?');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-outline-success btn-sm">Release Payout</button>
+                    </form>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 bg-light rounded text-center small text-muted">
+        No payment transactions recorded yet.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

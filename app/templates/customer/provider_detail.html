@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ provider.name }} — Provider Profile — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <!-- Left Column: Provider Overview -->
+    <div class="col-lg-4">
+      <div class="card card-fixmate p-4 text-center">
+        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3 fw-bold fs-2" style="width: 80px; height: 80px;">
+          {{ provider.name[:1] }}
+        </div>
+        <h4 class="fw-bold mb-1">{{ provider.name }}</h4>
+        <span class="badge bg-success-subtle text-success border border-success-subtle mb-3 d-inline-block px-3 py-1">
+          <i class="bi bi-patch-check-fill me-1"></i> Background-Verified Technician
+        </span>
+
+        <div class="p-3 bg-light rounded text-start small mb-3">
+          <div class="mb-2"><i class="bi bi-geo-alt text-danger me-2"></i><strong>Area:</strong> {{ profile.service_area_name }}</div>
+          <div class="mb-2"><i class="bi bi-pin-map text-secondary me-2"></i><strong>Pincode:</strong> {{ profile.service_pincode }} ({{ profile.service_radius_km }}km radius)</div>
+          <div class="mb-2"><i class="bi bi-briefcase text-secondary me-2"></i><strong>Experience:</strong> {{ profile.experience_years }} Years</div>
+          <div><i class="bi bi-clock-history text-secondary me-2"></i><strong>Availability:</strong> <span class="badge bg-success-subtle text-success">{{ profile.availability_status }}</span></div>
+        </div>
+
+        <div class="d-flex justify-content-around p-3 bg-primary-subtle rounded text-center mb-3">
+          <div>
+            <span class="fs-4 fw-bold text-primary">{{ profile.rating_avg }} ★</span>
+            <span class="d-block small text-muted">Avg Rating ({{ profile.rating_count }})</span>
+          </div>
+          <div class="border-start border-primary-subtle ps-3">
+            <span class="fs-4 fw-bold text-dark">{{ profile.completed_jobs_count }}</span>
+            <span class="d-block small text-muted">Completed Jobs</span>
+          </div>
+        </div>
+
+        <a href="{{ url_for('customer.book_service', provider_id=provider.id) }}" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold">
+          <i class="bi bi-calendar-plus me-1"></i> Book {{ provider.name }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Right Column: Bio, Offered Services & Customer Reviews -->
+    <div class="col-lg-8">
+      <div class="card card-fixmate p-4 mb-4">
+        <h5 class="fw-bold mb-3">About the Professional</h5>
+        <p class="text-secondary small mb-0">{{ profile.bio or 'Dedicated service professional committed to high quality workmanship and prompt service.' }}</p>
+      </div>
+
+      <div class="card card-fixmate p-4 mb-4">
+        <h5 class="fw-bold mb-3">Services Offered & Standard Rates</h5>
+        <div class="list-group list-group-flush">
+          {% for svc in services %}
+            <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-0">
+              <div>
+                <h6 class="fw-bold mb-1"><i class="bi {{ svc.category.icon }} text-primary me-2"></i>{{ svc.category.name }}</h6>
+                <p class="small text-muted mb-0">{{ svc.description or svc.category.description }}</p>
+              </div>
+              <div class="text-end">
+                <span class="fs-5 fw-bold text-primary d-block">₹{{ svc.custom_price }}</span>
+                <a href="{{ url_for('customer.book_service', provider_id=provider.id, category_id=svc.category_id) }}" class="btn btn-outline-primary btn-sm rounded-pill mt-1">Book This</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Customer Reviews Section (SRS 4.7) -->
+      <div class="card card-fixmate p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0">Verified Customer Reviews</h5>
+          <span class="badge bg-light text-dark border">{{ reviews|length }} Reviews</span>
+        </div>
+
+        {% if reviews %}
+          <div class="list-group list-group-flush">
+            {% for r in reviews %}
+              <div class="list-group-item py-3 px-0">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-semibold small">{{ r.customer.name }}</span>
+                  <span class="star-rating star-rating-sm">
+                    {% for i in range(r.rating) %}★{% endfor %}
+                  </span>
+                </div>
+                <p class="small text-secondary mb-1">"{{ r.comment or 'Excellent service.' }}"</p>
+                <span class="text-muted" style="font-size: 0.75rem;">Reviewed on {{ r.created_at.strftime('%d-%b-%Y') }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">No reviews yet for this provider.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

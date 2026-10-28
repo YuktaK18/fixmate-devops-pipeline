@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}FixMate — Home Service Management System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="py-5 bg-white border-bottom">
+  <div class="container py-4">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <span class="badge bg-primary-subtle text-primary fw-semibold mb-3 px-3 py-2 rounded-pill">
+          <i class="bi bi-shield-check me-1"></i> 100% Background-Verified Professionals
+        </span>
+        <h1 class="display-4 fw-bold text-dark lh-sm mb-3">
+          Reliable Home Services, <span class="text-primary">Delivered at Your Doorstep</span>.
+        </h1>
+        <p class="lead text-muted mb-4">
+          Book verified plumbers, electricians, carpenters, cleaners, and appliance technicians in minutes. Transparent pricing, live tracking, and digital tax invoices.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{{ url_for('customer.categories') }}" class="btn btn-primary btn-lg rounded-pill px-4">
+            <i class="bi bi-search me-1"></i> Browse All Services
+          </a>
+          {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+              Join as Service Provider
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card card-fixmate p-4 shadow-sm border-0 bg-light">
+          <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Find Services in Mumbai</h5>
+          <p class="small text-muted mb-3">Filter verified professionals operating in Chembur, Sion, Ghatkopar, Kurla, and Central Mumbai.</p>
+          <div class="row g-2">
+            {% for cat in categories[:6] %}
+              <div class="col-6">
+                <a href="{{ url_for('customer.category_providers', slug=cat.slug) }}" class="btn btn-white border w-100 py-2 small fw-semibold text-start d-flex align-items-center">
+                  <i class="bi {{ cat.icon }} text-primary me-2 fs-6"></i> {{ cat.name }}
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Categories Grid Section -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="text-primary fw-semibold small text-uppercase">Service Offerings</span>
+      <h2 class="fw-bold">Explore Popular Categories</h2>
+      <p class="text-muted small">Standardized pricing boundaries enforced by platform administration</p>
+    </div>
+
+    <div class="row g-4">
+      {% for cat in categories %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <a href="{{ url_for('customer.category_providers', slug=cat.slug) }}" class="card card-fixmate h-100 p-4 text-decoration-none text-dark">
+            <div class="category-icon-box">
+              <i class="bi {{ cat.icon }}"></i>
+            </div>
+            <h5 class="fw-bold mb-1">{{ cat.name }}</h5>
+            <p class="small text-muted mb-3">{{ cat.description | truncate(60) }}</p>
+            <div class="mt-auto d-flex justify-content-between align-items-center">
+              <span class="badge bg-light text-dark border">From ₹{{ cat.min_base_price }}</span>
+              <span class="text-primary small fw-semibold">View <i class="bi bi-arrow-right"></i></span>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-white border-top border-bottom">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="text-primary fw-semibold small text-uppercase">Simple 4-Step Process</span>
+      <h2 class="fw-bold">How FixMate Works</h2>
+    </div>
+
+    <div class="row g-4 text-center">
+      <div class="col-md-3">
+        <div class="p-4">
+          <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+            <i class="bi bi-search fs-3"></i>
+          </div>
+          <h5 class="fw-bold">1. Select Service</h5>
+          <p class="small text-muted">Browse categories and compare background-verified technicians by rating and price.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-4">
+          <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+            <i class="bi bi-calendar-check fs-3"></i>
+          </div>
+          <h5 class="fw-bold">2. Book Appointment</h5>
+          <p class="small text-muted">Pick a date up to 30 days ahead and select your preferred 2-hour arrival slot.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-4">
+          <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+            <i class="bi bi-tools fs-3"></i>
+          </div>
+          <h5 class="fw-bold">3. Job Execution</h5>
+          <p class="small text-muted">Technician accepts within 5 minutes, arrives on site, and executes the service.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="p-4">
+          <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+            <i class="bi bi-receipt-cutoff fs-3"></i>
+          </div>
+          <h5 class="fw-bold">4. Pay & Review</h5>
+          <p class="small text-muted">Pay securely through simulated UPI/Card/Wallet, receive GST invoice, and rate your experience.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Top Rated Providers -->
+{% if top_providers %}
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="text-primary fw-semibold small text-uppercase">Trusted Experts</span>
+      <h2 class="fw-bold">Top Verified Service Providers</h2>
+    </div>
+
+    <div class="row g-4">
+      {% for prof in top_providers %}
+        <div class="col-md-6 col-lg-3">
+          <div class="card card-fixmate h-100 p-4">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; font-weight: bold;">
+                {{ prof.user.name[:1] }}
+              </div>
+              <div>
+                <h6 class="fw-bold mb-0">{{ prof.user.name }}</h6>
+                <span class="badge bg-success-subtle text-success small" style="font-size: 0.7rem;"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+              </div>
+            </div>
+            <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1 text-danger"></i> {{ prof.service_area_name }}</p>
+            <div class="d-flex align-items-center mb-3">
+              <span class="star-rating star-rating-sm me-2">
+                ★ {{ prof.rating_avg }}
+              </span>
+              <span class="small text-muted">({{ prof.completed_jobs_count }} completed jobs)</span>
+            </div>
+            <div class="mt-auto">
+              <a href="{{ url_for('customer.provider_detail', provider_id=prof.user_id) }}" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
+                View Profile & Rates
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Customer Testimonials -->
+{% if featured_reviews %}
+<section class="py-5 bg-light border-top">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="text-primary fw-semibold small text-uppercase">Customer Satisfaction</span>
+      <h2 class="fw-bold">What Our Users Say</h2>
+    </div>
+
+    <div class="row g-4">
+      {% for rev in featured_reviews %}
+        <div class="col-md-4">
+          <div class="card card-fixmate h-100 p-4 border-0">
+            <div class="star-rating mb-2">
+              {% for i in range(rev.rating) %}★{% endfor %}
+            </div>
+            <p class="small text-secondary mb-3">"{{ rev.comment or 'Prompt service and very professional technician.' }}"</p>
+            <div class="mt-auto pt-2 border-top">
+              <span class="fw-semibold small d-block">{{ rev.customer.name }}</span>
+              <span class="text-muted" style="font-size: 0.75rem;">Booking for {{ rev.booking.category.name }}</span>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

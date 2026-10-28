@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block title %}Job #{{ booking.booking_code }} — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+    <div>
+      <a href="{{ url_for('provider.bookings') }}" class="small text-decoration-none text-muted mb-1 d-inline-block">
+        <i class="bi bi-arrow-left me-1"></i> Back to Jobs
+      </a>
+      <h3 class="fw-bold mb-1">Job #{{ booking.booking_code }}</h3>
+      <span class="text-muted small">Service: <strong>{{ booking.category.name }}</strong> &bull; Requested {{ booking.created_at.strftime('%d-%b-%Y %H:%M') }}</span>
+    </div>
+    <div class="text-end">
+      <span class="badge badge-{{ booking.status.lower() }} fs-6 px-3 py-2">{{ booking.status }}</span>
+      {% if booking.status == 'PENDING' and booking.response_deadline %}
+        <div class="mt-2" data-countdown-deadline="{{ booking.response_deadline.isoformat() }}"></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Reschedule Pending Alert -->
+  {% if booking.status == 'RESCHEDULED' %}
+    <div class="alert alert-warning shadow-sm mb-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h6 class="fw-bold mb-1"><i class="bi bi-clock-history me-1"></i> Reschedule Request Pending</h6>
+          <p class="small mb-0">
+            {% if booking.reschedule_requested_by_id == current_user.id %}
+              You requested to reschedule this appointment to <strong>{{ booking.reschedule_proposed_date.strftime('%d-%b-%Y') }} ({{ booking.reschedule_proposed_time_slot }})</strong>. Waiting for customer approval.
+            {% else %}
+              Customer {{ booking.customer.name }} requested rescheduling to <strong>{{ booking.reschedule_proposed_date.strftime('%d-%b-%Y') }} ({{ booking.reschedule_proposed_time_slot }})</strong>.
+            {% endif %}
+          </p>
+        </div>
+        {% if booking.reschedule_requested_by_id != current_user.id %}
+          <form method="POST" action="{{ url_for('customer.respond_reschedule', booking_id=booking.id) }}" class="d-flex gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" name="action" value="accept" class="btn btn-sm btn-success">Accept Reschedule</button>
+            <button type="submit" name="action" value="decline" class="btn btn-sm btn-outline-danger">Decline</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Provider Workflow Action Banner (SRS 4.4 & 4.6) -->
+  <div class="card card-fixmate bg-light border-0 p-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <h5 class="fw-bold mb-1">Execution Controls</h5>
+        <span class="small text-muted">Update job lifecycle as you arrive on site and complete tasks.</span>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <!-- If PENDING: Accept / Decline -->
+        {% if booking.status == 'PENDING' %}
+          <form method="POST" action="{{ url_for('provider.accept_booking', booking_id=booking.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success fw-semibold px-4" {% if not current_user.provider_profile.is_approved %}disabled title="Account must be verified by admin"{% endif %}>
+              <i class="bi bi-check-circle me-1"></i> Accept Job (5-Min SLA)
+            </button>
+          </form>
+          <form method="POST" action="{{ url_for('provider.reject_booking', booking_id=booking.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-danger px-3">
+              <i class="bi bi-x-circle me-1"></i> Decline
+            </button>
+          </form>
+        {% endif %}
+
+        <!-- If ACCEPTED: Start Job -->
+        {% if booking.status == 'ACCEPTED' %}
+          <form method="POST" action="{{ url_for('provider.start_job', booking_id=booking.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary fw-semibold px-4">
+              <i class="bi bi-play-circle me-1"></i> Arrived on Site & Start Job
+            </button>
+          </form>
+          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#rescheduleModal">
+            <i class="bi bi-calendar-event me-1"></i> Propose Reschedule
+          </button>
+        {% endif %}
+
+        <!-- If IN_PROGRESS: Complete Job with Final Amount -->
+        {% if booking.status == 'IN_PROGRESS' %}
+          <button type="button" class="btn btn-success fw-semibold px-4" data-bs-toggle="modal" data-bs-target="#completeModal">
+            <i class="bi bi-check-all me-1"></i> Finish & Confirm Bill Amount
+          </button>
+        {% endif %}
+
+        <!-- If COMPLETED: Payment Status -->
+        {% if booking.status == 'COMPLETED' %}
+          <span class="badge bg-success fs-6 p-2">
+            <i class="bi bi-check-circle-fill me-1"></i> Service Complete &bull; {{ 'Payment Recorded' if booking.payment else 'Awaiting Customer Payment' }}
+          </span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Customer & Job Details -->
+    <div class="col-lg-7">
+      <div class="card card-fixmate p-4 mb-4">
+        <h5 class="fw-bold mb-3">Customer Information</h5>
+        <div class="row g-3 small">
+          <div class="col-6">
+            <span class="text-muted d-block">Customer Name:</span>
+            <span class="fw-bold text-dark fs-6">{{ booking.customer.name }}</span>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Customer Contact:</span>
+            <a href="tel:{{ booking.customer.phone }}" class="fw-bold text-primary fs-6 text-decoration-none">
+              <i class="bi bi-telephone-fill me-1"></i> {{ booking.customer.phone }}
+            </a>
+          </div>
+          <div class="col-12">
+            <span class="text-muted d-block">Service Address:</span>
+            <span class="fw-semibold text-dark">{{ booking.service_address }}</span>
+            <span class="text-muted d-block">Pincode: {{ booking.pincode }}</span>
+            <a href="https://maps.google.com/?q={{ booking.service_address|urlencode }}+{{ booking.pincode }}" target="_blank" class="small text-decoration-none mt-1 d-inline-block">
+              <i class="bi bi-geo-alt-fill text-danger me-1"></i> Open Location in Google Maps
+            </a>
+          </div>
+          {% if booking.special_instructions %}
+            <div class="col-12">
+              <span class="text-muted d-block">Customer Instructions:</span>
+              <span class="fst-italic text-secondary">{{ booking.special_instructions }}</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Financial Split Breakdown -->
+      <div class="card card-fixmate p-4">
+        <h5 class="fw-bold mb-3">Financial Settlement Breakdown</h5>
+        <div class="table-responsive small">
+          <table class="table table-bordered align-middle mb-0">
+            <tbody>
+              <tr>
+                <td class="text-muted">Quoted Base Price:</td>
+                <td class="text-end fw-semibold">₹{{ booking.quoted_amount }}</td>
+              </tr>
+              {% if booking.final_amount %}
+                <tr class="table-info">
+                  <td class="fw-semibold">Final Confirmed Service Amount:</td>
+                  <td class="text-end fw-bold text-primary">₹{{ booking.final_amount }}</td>
+                </tr>
+              {% endif %}
+              <tr>
+                <td class="text-muted">FixMate Platform Commission (10%):</td>
+                <td class="text-end text-danger">- ₹{{ (Decimal('0.10') * (booking.final_amount or booking.quoted_amount)).quantize(Decimal('0.01')) }}</td>
+              </tr>
+              <tr class="table-success">
+                <td class="fw-bold">Your Net Earnings (90%):</td>
+                <td class="text-end fw-bold text-success fs-6">
+                  ₹{{ ((booking.final_amount or booking.quoted_amount) - (Decimal('0.10') * (booking.final_amount or booking.quoted_amount))).quantize(Decimal('0.01')) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="form-text small mt-2">Payout is credited to your earnings ledger upon customer checkout and held for 24h.</div>
+      </div>
+    </div>
+
+    <!-- Right Column: Status Timeline -->
+    <div class="col-lg-5">
+      <div class="card card-fixmate p-4">
+        <h6 class="fw-bold text-muted small text-uppercase mb-3">Status Audit Trail</h6>
+        <div class="timeline small">
+          {% for h in booking.status_history %}
+            <div class="timeline-item">
+              <div class="timeline-badge">
+                <i class="bi bi-clock-history"></i>
+              </div>
+              <span class="fw-bold text-dark d-block">{{ h.new_status }}</span>
+              <span class="text-muted d-block" style="font-size: 0.75rem;">{{ h.created_at.strftime('%d-%b-%Y %H:%M') }}</span>
+              {% if h.notes %}
+                <p class="text-secondary mb-0 mt-1">{{ h.notes }}</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Complete Job with Final Amount (SRS 4.6.2) -->
+<div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="completeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('provider.complete_job', booking_id=booking.id) }}">
+        {{ complete_form.hidden_tag() }}
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="completeModalLabel">Complete Job #{{ booking.booking_code }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body small">
+          <p class="text-muted mb-3">Confirm the final billable amount for this job. You may adjust the quoted price if additional components or extra labor was required with customer agreement.</p>
+          <div class="mb-3">
+            {{ complete_form.final_amount.label(class="form-label fw-semibold") }}
+            <div class="input-group">
+              <span class="input-group-text">₹</span>
+              {{ complete_form.final_amount(class="form-control", value=booking.quoted_amount) }}
+            </div>
+            <div class="form-text">Quoted base price was ₹{{ booking.quoted_amount }}.</div>
+          </div>
+          <div class="mb-3">
+            {{ complete_form.notes.label(class="form-label fw-semibold") }}
+            {{ complete_form.notes(class="form-control", rows="3", placeholder="e.g. Replaced leaking valve and sealed joint; customer tested...") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          {{ complete_form.submit(class="btn btn-success btn-sm fw-semibold") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Reschedule Proposal -->
+<div class="modal fade" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('customer.request_reschedule', booking_id=booking.id) }}">
+        {{ reschedule_form.hidden_tag() }}
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="rescheduleModalLabel">Propose Reschedule to Customer</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body small">
+          <div class="mb-3">
+            {{ reschedule_form.proposed_date.label(class="form-label fw-semibold") }}
+            {{ reschedule_form.proposed_date(class="form-control", min=now.strftime('%Y-%m-%d')) }}
+          </div>
+          <div class="mb-3">
+            {{ reschedule_form.proposed_time_slot.label(class="form-label fw-semibold") }}
+            {{ reschedule_form.proposed_time_slot(class="form-select") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          {{ reschedule_form.submit(class="btn btn-primary btn-sm") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

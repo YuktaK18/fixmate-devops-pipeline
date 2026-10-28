@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Complaints & Disputes — FixMate Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">Customer Complaints & Disputes</h3>
+      <p class="text-muted small mb-0">Workflow: OPEN &rarr; IN_REVIEW &rarr; RESOLVED / REJECTED (SRS 4.7.3 & 4.8).</p>
+    </div>
+  </div>
+
+  <!-- Filter Pills -->
+  <ul class="nav nav-pills mb-4 gap-2">
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'ALL' %}active{% endif %}" href="{{ url_for('admin.complaints', status='ALL') }}">All Tickets</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'OPEN' %}active{% endif %}" href="{{ url_for('admin.complaints', status='OPEN') }}">Open</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'IN_REVIEW' %}active{% endif %}" href="{{ url_for('admin.complaints', status='IN_REVIEW') }}">In Review</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'RESOLVED' %}active{% endif %}" href="{{ url_for('admin.complaints', status='RESOLVED') }}">Resolved</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if current_filter == 'REJECTED' %}active{% endif %}" href="{{ url_for('admin.complaints', status='REJECTED') }}">Rejected</a>
+    </li>
+  </ul>
+
+  <!-- Complaints Table -->
+  <div class="card card-fixmate p-4">
+    {% if complaints %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Ticket Ref</th>
+              <th>Customer</th>
+              <th>Subject</th>
+              <th>Booking</th>
+              <th>Filed Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in complaints %}
+              <tr>
+                <td class="fw-bold text-danger">#{{ c.ticket_number }}</td>
+                <td>{{ c.customer.name }}<br/><span class="text-muted">{{ c.customer.phone }}</span></td>
+                <td><strong>{{ c.subject }}</strong></td>
+                <td>#{{ c.booking.booking_code }} ({{ c.booking.category.name }})</td>
+                <td class="text-muted">{{ c.created_at.strftime('%d-%b-%Y') }}</td>
+                <td>
+                  <span class="badge bg-{{ 'danger' if c.status == 'OPEN' else ('warning text-dark' if c.status == 'IN_REVIEW' else ('success' if c.status == 'RESOLVED' else 'secondary')) }}">
+                    {{ c.status }}
+                  </span>
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.complaint_detail', complaint_id=c.id) }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                    Investigate
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 bg-light rounded text-center small text-muted">
+        No complaints found matching filter "{{ current_filter }}".
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}My Complaints & Disputes — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">My Complaints & Disputes</h3>
+      <p class="text-muted small mb-0">Track the investigation and resolution status of your dispute tickets (SRS 4.7.3).</p>
+    </div>
+  </div>
+
+  {% if complaints %}
+    <div class="row g-3">
+      {% for c in complaints %}
+        <div class="col-12">
+          <div class="card card-fixmate p-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="badge bg-{{ 'primary' if c.status == 'OPEN' else ('warning text-dark' if c.status == 'IN_REVIEW' else ('success' if c.status == 'RESOLVED' else 'danger')) }} mb-2">
+                  {{ c.status }}
+                </span>
+                <h5 class="fw-bold mb-1">{{ c.subject }}</h5>
+                <span class="text-muted small">Ticket: <strong>#{{ c.ticket_number }}</strong> | Booking: <a href="{{ url_for('customer.booking_detail', booking_id=c.booking_id) }}" class="text-decoration-none">#{{ c.booking.booking_code }}</a> ({{ c.booking.category.name }})</span>
+              </div>
+              <span class="text-muted small">{{ c.created_at.strftime('%d-%b-%Y') }}</span>
+            </div>
+
+            <p class="small text-secondary mb-3">{{ c.description }}</p>
+
+            {% if c.photo_filename %}
+              <div class="mb-3">
+                <span class="small text-muted d-block mb-1">Attached Evidence Photo:</span>
+                <img src="/static/uploads/complaints/{{ c.photo_filename }}" alt="Evidence" class="img-thumbnail" style="max-height: 120px;" onerror="this.style.display='none'">
+              </div>
+            {% endif %}
+
+            {% if c.resolution_notes %}
+              <div class="p-3 bg-light rounded border border-info-subtle small">
+                <strong class="text-primary"><i class="bi bi-info-circle me-1"></i> Admin Resolution Notes:</strong>
+                <p class="mb-0 mt-1 text-secondary">{{ c.resolution_notes }}</p>
+                {% if c.resolved_at %}
+                  <span class="text-muted" style="font-size: 0.75rem;">Resolved on {{ c.resolved_at.strftime('%d-%b-%Y %H:%M') }}</span>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card card-fixmate p-5 text-center bg-light">
+      <i class="bi bi-shield-check fs-1 text-success d-block mb-3"></i>
+      <h5 class="fw-bold">No complaints on record</h5>
+      <p class="small text-muted mb-0">You have not filed any dispute tickets. If you ever experience issues with a completed job, you can lodge a ticket within 7 days.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

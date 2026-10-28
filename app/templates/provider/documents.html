@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}KYC Document Verification — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <!-- Upload Form Column -->
+    <div class="col-lg-6">
+      <div class="card card-fixmate p-4 p-md-5">
+        <h4 class="fw-bold mb-1">Upload KYC Documents</h4>
+        <p class="small text-muted mb-4">Mandatory verification per SRS Section 4.2 before accepting customer jobs.</p>
+
+        <form method="POST" action="{{ url_for('provider.documents') }}" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-4">
+            {{ form.id_proof.label(class="form-label fw-semibold small") }}
+            {{ form.id_proof(class="form-control") }}
+            <div class="form-text small">Accepted formats: PDF, PNG, JPG, JPEG (Max 5 MB).</div>
+          </div>
+
+          <div class="mb-4">
+            {{ form.address_proof.label(class="form-label fw-semibold small") }}
+            {{ form.address_proof(class="form-control") }}
+            <div class="form-text small">Electricity bill, rent agreement, or Aadhaar back page.</div>
+          </div>
+
+          <div class="p-3 bg-light rounded border mb-4 small text-muted">
+            <i class="bi bi-shield-lock-fill text-primary me-1"></i>
+            <strong>Security Safeguard:</strong> Uploaded documents are stored outside the public static directory with randomized filenames and are served strictly through authorized, role-checked routes.
+          </div>
+
+          <div class="d-grid">
+            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Uploaded Documents & Status Column -->
+    <div class="col-lg-6">
+      <div class="card card-fixmate p-4 mb-4">
+        <h5 class="fw-bold mb-3">Verification Status</h5>
+        <div class="p-3 rounded mb-3 {% if profile.verification_status == 'APPROVED' %}bg-success-subtle border border-success-subtle{% elif profile.verification_status == 'PENDING' %}bg-warning-subtle border border-warning-subtle{% else %}bg-danger-subtle border border-danger-subtle{% endif %}">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="small text-muted text-uppercase fw-semibold d-block">Current Status:</span>
+              <strong class="fs-5">{{ profile.verification_status }}</strong>
+            </div>
+            <div>
+              {% if profile.verification_status == 'APPROVED' %}
+                <span class="badge bg-success">Eligible to Take Jobs</span>
+              {% elif profile.verification_status == 'PENDING' %}
+                <span class="badge bg-warning text-dark">Under Admin Review</span>
+              {% else %}
+                <span class="badge bg-danger">Correction Required</span>
+              {% endif %}
+            </div>
+          </div>
+          {% if profile.rejection_reason %}
+            <div class="mt-2 pt-2 border-top border-danger-subtle small text-danger">
+              <strong>Rejection Reason:</strong> {{ profile.rejection_reason }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Uploaded Files Table -->
+      <div class="card card-fixmate p-4">
+        <h5 class="fw-bold mb-3">Uploaded Verification Records</h5>
+        {% if profile.documents %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle small mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Doc Type</th>
+                  <th>Original Name</th>
+                  <th>Uploaded</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for d in profile.documents %}
+                  <tr>
+                    <td>
+                      <span class="badge bg-primary">{{ 'Govt Photo ID' if d.document_type == 'ID_PROOF' else 'Address Proof' }}</span>
+                    </td>
+                    <td>{{ d.original_filename | truncate(20) }}</td>
+                    <td class="text-muted">{{ d.uploaded_at.strftime('%d-%b-%Y') }}</td>
+                    <td>
+                      <a href="{{ url_for('provider.view_document', document_id=d.id) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye me-1"></i> View
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">No documents uploaded yet. Please submit your ID and Address proofs to start taking jobs.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

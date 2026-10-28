@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Set New Password — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card card-fixmate p-4 p-md-5">
+        <div class="text-center mb-4">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+            <i class="bi bi-shield-lock-fill fs-4"></i>
+          </div>
+          <h4 class="fw-bold">Create New Password</h4>
+          <p class="text-muted small">Choose a secure password of at least 8 characters</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.reset_password_token', token=token) }}" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.password.label(class="form-label fw-semibold small") }}
+            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="New password") }}
+            {% for error in form.password.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ form.confirm_password.label(class="form-label fw-semibold small") }}
+            {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Confirm new password") }}
+            {% for error in form.confirm_password.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="d-grid mb-3">
+            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

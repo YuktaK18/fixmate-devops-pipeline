@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Help & FAQ — FixMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="text-center mb-5">
+        <h2 class="fw-bold text-primary">Frequently Asked Questions</h2>
+        <p class="text-muted small">Everything you need to know about booking, verification, payments, and policy rules</p>
+      </div>
+
+      <div class="accordion shadow-sm" id="fixmateFaq">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="faq1">
+            <button class="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
+              How does provider verification work on FixMate?
+            </button>
+          </h2>
+          <div id="collapse1" class="accordion-collapse collapse show" aria-labelledby="faq1" data-bs-parent="#fixmateFaq">
+            <div class="accordion-body small text-secondary">
+              Before any service provider can appear in customer search results or accept bookings, they must submit a valid Government ID and proof of address. FixMate administrators manually review each application and verify documents through a secure, encrypted viewer before granting APPROVED status.
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="faq2">
+            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+              What happens if a provider does not accept my booking?
+            </button>
+          </h2>
+          <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="faq2" data-bs-parent="#fixmateFaq">
+            <div class="accordion-body small text-secondary">
+              Providers are allotted a strict 5-minute response window for each new booking request. If a technician does not respond within 5 minutes, our automated scheduling engine offers the booking to the next best-matched available provider in your locality, or safely notifies you if no alternative is free.
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="faq3">
+            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+              How are payments and taxes handled?
+            </button>
+          </h2>
+          <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="faq3" data-bs-parent="#fixmateFaq">
+            <div class="accordion-body small text-secondary">
+              Payment is made through our simulated checkout (UPI, Card, Net Banking, or Wallet) after the job is completed. Every bill calculates 18% GST (CGST 9% + SGST 9%) and a downloadable official tax invoice is generated. Provider payouts deduct a 10% platform commission and are held in escrow until confirmed or for 24 hours.
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="faq4">
+            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+              Can I cancel or reschedule my booking?
+            </button>
+          </h2>
+          <div id="collapse4" class="accordion-collapse collapse" aria-labelledby="faq4" data-bs-parent="#fixmateFaq">
+            <div class="accordion-body small text-secondary">
+              Yes. You can cancel free of charge while the request is PENDING. For ACCEPTED bookings, cancellations made on the scheduled service day incur a 10% late cancellation fee. Rescheduling requires mutual agreement between customer and technician.
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="faq5">
+            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5" aria-expanded="false" aria-controls="collapse5">
+              What should I do if the service was unsatisfactory?
+            </button>
+          </h2>
+          <div id="collapse5" class="accordion-collapse collapse" aria-labelledby="faq5" data-bs-parent="#fixmateFaq">
+            <div class="accordion-body small text-secondary">
+              Customers can submit a review and rating (1 to 5 stars) after any completed job. Furthermore, you may lodge a formal complaint ticket with optional photo evidence within 7 days of service completion. FixMate administrators investigate all complaints and can issue full or partial refunds.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
