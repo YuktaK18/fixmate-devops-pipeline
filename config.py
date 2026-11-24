@@ -98,3 +98,10 @@ class ProductionConfig(Config):
         database_url += separator + 'ssl_verify_cert=true&ssl_verify_identity=true'
 
     SQLALCHEMY_DATABASE_URI = database_url
+
+config_by_name = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig,
+    'production': ProductionConfig,
+    'default': DevelopmentConfig,
+}
