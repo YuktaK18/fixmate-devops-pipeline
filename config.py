@@ -81,17 +81,20 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-    """Production environment configuration."""
     DEBUG = False
     TESTING = False
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 
+    database_url = os.getenv('DATABASE_URL')
 
-config_by_name = {
-    'development': DevelopmentConfig,
-    'testing': TestingConfig,
-    'production': ProductionConfig,
-    'default': DevelopmentConfig,
-}
+    if database_url and database_url.startswith('mysql://'):
+        database_url = database_url.replace(
+            'mysql://', 'mysql+pymysql://', 1
+        )
+
+    if database_url and 'ssl_verify_cert' not in database_url:
+        separator = '&' if '?' in database_url else '?'
+        database_url += separator + 'ssl_verify_cert=true&ssl_verify_identity=true'
+
+    SQLALCHEMY_DATABASE_URI = database_url
